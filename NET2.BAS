@@ -3,14 +3,14 @@
 'Original incomplete version - July 1, 1998
 'Version 2.0 - November 21st, 2021
 
-CONST rows = 8
-CONST cols = 80
-CONST delay = 20
+CONST rows = 15
+CONST delay = 6
 
 DECLARE SUB Lineout ()
+DECLARE SUB Pause (ticks)
 
-DIM SHARED multi AS INTEGER
-multi = 5
+DIM SHARED slowbaud as INTEGER
+slowbaud = 1
 
 DIM SHARED lines$(rows)
 
@@ -23,13 +23,10 @@ NEXT x
 PRINT "300 baud lineout": PRINT
 Lineout
 
-PRINT "1200 baud lineout": PRINT
-multi = 2
-Lineout
+SLEEP 2
 
 PRINT "2400 baud lineout": PRINT
-SLEEP 1
-multi = 1
+slowbaud = 0
 Lineout
 
 END
@@ -130,24 +127,30 @@ DATA "* 7) ACTIVATE HES SYSTEM"
 DATA "* 8) ACTIVATE LAUNCH PREPARATION..."
 DATA "* 9) RETURN TO GUEST LEVEL SECURITY"
 DATA "********************************************************************************"
-DATA "\n"
+DATA ""
 DATA "          Enter number of choice here -----> "
 
 SUB Lineout
+    sound$ = "T255MSMFO2L64A"
+    IF slowbaud THEN sound$ = "T255MSMFO5L64DAP64"
+
     FOR i = 1 TO rows
         outpt$ = lines$(i)
         FOR j = 1 TO LEN(outpt$)
             char$ = MID$(outpt$, j, 1)
             PRINT char$;
-            IF char$ <> " " THEN PLAY "T255MSMFO5L64D"
-            FOR k = 1 TO multi * delay
-            NEXT k
+            IF char$ <> " " THEN PLAY sound$
+            Pause (1)
         NEXT j
-        IF LEN(outpt$) < 80 THEN
-            PRINT
-            FOR k = 1 TO multi * delay * 5
-            NEXT k
-        END IF
+        PRINT
+        Pause (5)
     NEXT i
+END SUB
+
+SUB Pause (ticks)
+    iter = delay * ticks
+    IF slowbaud THEN iter = iter * 5
+    FOR k = 1 TO iter
+    NEXT k
 END SUB
 

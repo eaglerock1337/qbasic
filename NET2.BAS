@@ -44,8 +44,9 @@ DIM SHARED cpmfiles$(12)        ' The list of files on the B: drive
 DIM SHARED cpmfilenum%          ' Number of files on B: drive
 DIM SHARED cpmspace%            ' Available B: drive space in KB
 DIM SHARED slowbaud             ' If the terminal runs at 300 baud
-'DIM SHARED remote               ' If the terminal is outputting remote data
-
+DIM SHARED remote               ' If the terminal is outputting remote data
+DIM SHARED colorterm            ' If terminal color is enabled
+DIM SHARED defaultcolor         ' The default terminal color
 
 ' Custom data types
 TYPE TextData                   ' Text string metadata
@@ -108,6 +109,8 @@ cpmfilenum% = 0
 cpmspace% = disksize%
 slowbaud = TRUE
 remote = FALSE
+colorterm = FALSE
+defaultcolor = GREEN
 
 
 Menu:
@@ -152,6 +155,13 @@ SELECT CASE cmd$
     CASE "TEST"
         slowbaud = FALSE
         CALL Lineout(1, 75)
+
+    CASE "COLOR"
+        IF colorterm THEN
+            colorterm = FALSE
+        ELSE
+            colorterm = TRUE
+        END IF
 
     CASE ELSE
         PRINT cmd$ + "?"
@@ -314,7 +324,7 @@ GameFiles:  ' Data files inside the game
 DATA 0      ' Number of outputs
 
 SUB Delay (ticks%)
-' Delay the local terminal for x ticks
+' Delay the local terminal for number of ticks
     iter% = tickspeed% * ticks% * 25
     FOR k = 1 TO iter%
     NEXT k

@@ -4,8 +4,10 @@
 'Version 2.0 - November 21st, 2021
 
 
+REM $DYNAMIC
+
 ' Subroutine declarations
-DECLARE SUB Lineout (lines$(), numlines%)
+DECLARE SUB Lineout (startline%, numlines%)
 DECLARE SUB Pause (ticks%)
 DECLARE SUB Delay (ticks%)
 DECLARE SUB Disk (seconds%)
@@ -48,14 +50,13 @@ DIM SHARED slowbaud             ' If the terminal runs at 300 baud
 
 
 ' Custom data types
-TYPE textline                   ' An individual string of text
+TYPE TextData                   ' Text string metadata
     fgcolor AS INTEGER          ' Text foreground color (if enabled)
     bgcolor AS INTEGER          ' Text background color (if enabled)
-    linefeed AS INTEGER         ' If a carriage return is needed
-    text AS STRING              ' The string of text (or placeholder data)
+    linefeed AS INTEGER         ' If a newline is needed
 END TYPE
 
-TYPE event                      ' A game event that updates player score
+TYPE GameEvent                  ' A game event that updates player score
     score AS INTEGER            ' Change of score (positive or negative)
     cred AS INTEGER             ' Change of cred (positive or negative)
     times AS INTEGER            ' Times the reward is given (-1 for unlimited)
@@ -63,20 +64,20 @@ TYPE event                      ' A game event that updates player score
     numlines AS INTEGER         ' The number of lines to output
 END TYPE
 
-TYPE header                     ' A game screen header
+TYPE GameHeader                 ' A game screen header
     startline AS INTEGER        ' The start line of the header text
     numlines AS INTEGER         ' The number of lines to the header
 END TYPE
 
-TYPE Gamescreen                 ' A complete game screen
+TYPE GameScreen                 ' A complete game screen
     remote AS INTEGER           ' If the terminal is outputting remote data
     header AS INTEGER           ' Number of header to use
     startline AS INTEGER        ' The start line of the output text
     numlines AS INTEGER         ' The number of lines to output
 END TYPE
 
-TYPE Gamefile                   ' A file inside the simulator
-    filename AS STRING          ' The name of the file (e.g. VTEE.COM)
+TYPE GameFile                   ' A file inside the simulator
+    filename AS STRING * 12     ' The name of the file (e.g. VTEE.COM)
     size AS INTEGER             ' The size of the file in kb
     server AS INTEGER           ' The target server for this file (0 for an executable)
     event AS INTEGER            ' The triggered event if uploaded to the target server
@@ -85,15 +86,16 @@ END TYPE
 
 ' Read game data
 RESTORE Textlines
-DIM SHARED Textlines
-READ Textlines
+DIM SHARED Totallines AS INTEGER
+READ Totallines
 
-DIM SHARED textline(Textlines)
-FOR l = 1 TO Textlines
-    READ Textlines(l).fgcolor
-    READ Textlines(l).bgcolor
-    READ Textlines(l).linefeed
-    READ Textlines(l).text
+DIM SHARED linedata(1 TO Totallines) AS TextData
+DIM SHARED lines(1 TO Totallines) AS STRING
+FOR l = 1 TO Totallines
+    READ linedata(l).fgcolor
+    READ linedata(l).bgcolor
+    READ linedata(l).linefeed
+    READ lines(l)
 NEXT l
 
 
@@ -119,6 +121,7 @@ CPM:
 
 ' Boot Routine
 CLS
+COLOR GREEN, BLACK
 Delay (2)
 PRINT "CP/M 2.2 Copyright 1979 (c) by Digital Research"
 Disk (1)
@@ -126,6 +129,7 @@ Disk (1)
 Prompt:
 ' Disk Prompt
 
+COLOR GREEN, BLACK
 PRINT cpmdisk$;
 LINE INPUT ">", cmd$
 SELECT CASE cmd$
@@ -146,6 +150,10 @@ SELECT CASE cmd$
 
     CASE "QUIT"
         END
+
+    CASE "TEST"
+        slowbaud = FALSE
+        CALL Lineout(1, 75)
 
     CASE ELSE
         PRINT cmd$ + "?"
@@ -183,9 +191,9 @@ HACCBBS:
 ' Files - .GRB file formats (garbage), .DAT (used for tasks), .COM (executables)
 
 
-NETSERV:
-' NETSERV Customer Services Portal
-' For customers of the Network Services Corporation.
+BellFone:
+' BellFone Customer Services Portal
+' For customers of the BellFone Telephone Services Corporation
 ' Which you're not, so go 'way. Shoo.
 
 
@@ -203,100 +211,87 @@ XPLOD:
 ' IBM calls it the X-PLOD-3. That's totally not telling.
 
 
-Textlines:
 ' Individual lines of text data
-DATA 76  ' Total number of text lines
-         ' Format:   fgcolor%, bgcolor%, linefeed%, text$
-         ' Example:  DATA LIME, BLACK, TRUE, "line of text"
-' Random crap
-DATA LIME,      BLACK,  TRUE,   "line of text"
-DATA GREEN,     BLACK,  TRUE,   "other line of text"
-DATA BLACK,     BLACK,  TRUE,   " "
-DATA BLACK,     BLACK,  TRUE,   " "
-DATA BLACK,     BLACK,  TRUE,   " "
-DATA BLACK,     BLACK,  TRUE,   " "
-DATA BLACK,     BLACK,  TRUE,   " "
-DATA BLACK,     BLACK,  TRUE,   " "
-DATA BLACK,     BLACK,  TRUE,   " "
-DATA BLACK,     BLACK,  TRUE,   " "
-
-' Sample text from old game
-DATA LIME,      BLACK,  FALSE,  "********************************************************************************"
-DATA LIME,      BLACK,  FALSE,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           "
-DATA RED,       BLACK,  FALSE,  "TOP SECRET SECURITY"
-DATA LIME,      BLACK,  FALSE,  "*********************************************************************************"
-DATA LIME,      BLACK,  TRUE,   "* 1) CHECK SATELLITE"
-DATA LIME,      BLACK,  TRUE,   "* 2) CHECK SPACE SHUTTLE"
-DATA LIME,      BLACK,  TRUE,   "* 3) CHECK BOOSTER ROCKETS"
-DATA LIME,      BLACK,  TRUE,   "* 4) CHECK MAIN CONTROLS"
-DATA LIME,      BLACK,  TRUE,   "* 5) CHECK FUEL TANK"
-DATA LIME,      BLACK,  TRUE,   "* 6) ACTIVATE EBS SYSTEM"
-DATA LIME,      BLACK,  TRUE,   "* 7) ACTIVATE HES SYSTEM"
-DATA LIME,      BLACK,  TRUE,   "* 8) ACTIVATE LAUNCH PREPARATION..."
-DATA LIME,      BLACK,  TRUE,   "* 9) RETURN TO GUEST LEVEL SECURITY"
-DATA LIME,      BLACK,  FALSE,  "********************************************************************************"
-DATA LIME,      BLACK,  TRUE,   ""
-DATA LIME,      BLACK,  TRUE,   "          Enter number of choice here -----> "
-
-' More sample text from old game
-DATA ORANGE,    BLACK,  FALSE,  "********************************************************************************"
-DATA ORANGE,    BLACK,  FALSE,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           GUEST LEVEL SECURITY*"
-DATA ORANGE,    BLACK,  FALSE,  "********************************************************************************"
-DATA ORANGE,    BLACK,  FALSE,  "* 1) GET INFO ON THE SPACE SHUTTLE LAUNCH   2) INPUT CODE FOR HIGHER ATHORITY  *"
-DATA ORANGE,    BLACK,  FALSE,  "********************************************************************************"
-
-' 80s NASA LOGO for Public Gateway
-DATA RED,       SILVER, TRUE,   " ,@@@@@@C      @@@@     ,@@@@@@.      1@@@@@@@@@@@@      0@@@@@:"
-DATA RED,       SILVER, TRUE,   "i@@@@@@@@@     @@@@    i@@@@@@@@,   G@@@@@@@@@@@@@@     @@@@@@@@G"
-DATA RED,       SILVER, TRUE,   "G@@@t t@@@L    @@@@    @@@@ .@@@@  :@@@8               8@@@1 @@@@"
-DATA RED,       SILVER, TRUE,   "G@@@t  @@@@    @@@@   8@@@1  C@@@0 :@@@8              ;@@@@  ,@@@@"
-DATA RED,       SILVER, TRUE,   "C@@@1  ;@@@G   @@@@  ;@@@8    @@@@, G@@@@@@@@@@@@@    @@@@    0@@@L"
-DATA RED,       SILVER, TRUE,   "L@@@t   @@@@   @@@@  @@@@     .@@@@   f8@@@@@@@@@@@; 8@@@L     @@@@"
-DATA RED,       SILVER, TRUE,   "C@@@f   :@@@0  @@@@ 0@@@L      0@@@L           .@@@8:@@@@      :@@@@"
-DATA RED,       SILVER, TRUE,   "C@@@t    @@@@1:@@@@,@@@@        @@@@GGGGGGGCCC0@@@@L@@@@.       8@@@1"
-DATA RED,       SILVER, TRUE,   "C@@@t     @@@@@@@@C@@@@,        :@@@@@@@@@@@@@@@@@1G@@@C         @@@@"
-
-' STAR WARS logo for a Return of the Jedi reference
-DATA YELLOW,    BLACK,  TRUE,   "   .           .        .                     .        .            ."
-DATA YELLOW,    BLACK,  TRUE,   "             .               .    .          .              .   .         ."
-DATA YELLOW,    BLACK,  TRUE,   "               _________________      ____         __________"
-DATA YELLOW,    BLACK,  TRUE,   " .       .    /                 |    /    \    .  |          \ "
-DATA YELLOW,    BLACK,  TRUE,   "     .       /    ______   _____| . /      \      |    ___    |     .     ."
-DATA YELLOW,    BLACK,  TRUE,   "           .  \    \   |   |      /   /__\   \  . |         _/               ."
-DATA YELLOW,    BLACK,  TRUE,   " .     ________>    |  |   | .   /            \   |   |\    \_______    ."
-DATA YELLOW,    BLACK,  TRUE,   "      |            /   |   |    /    ______    \  |   | \           |"
-DATA YELLOW,    BLACK,  TRUE,   "      |___________/    |___|   /____/      \____\ |___|  \__________|    ."
-DATA YELLOW,    BLACK,  TRUE,   "  .     ____    __  . _____   ____      .  __________   .  _________"
-DATA YELLOW,    BLACK,  TRUE,   "       \    \  /  \  /    /  /    \       |          \    /         |      ."
-DATA YELLOW,    BLACK,  TRUE,   "        \    \/    \/    /  /      \      |    ___    |  /    ______|  ."
-DATA YELLOW,    BLACK,  TRUE,   "         \              /  /   /\   \ .   |   |___>   |  \    \ "
-DATA YELLOW,    BLACK,  TRUE,   "   .      \            /  /   /__\   \    |         _/.   \    \            ."
-DATA YELLOW,    BLACK,  TRUE,   "           \    /\    /  /            \   |   |\    \______>    |   ."
-DATA YELLOW,    BLACK,  TRUE,   "            \  /  \  /  /    ______    \  |   | \              /          ."
-DATA YELLOW,    BLACK,  TRUE,   " .       .   \/    \/  /____/      \____\ |___|  \____________/  LS"
-DATA YELLOW,    BLACK,  TRUE,   "                               .                                        ."
-DATA YELLOW,    BLACK,  TRUE,   "     .                           .         .               .                 ."
-DATA YELLOW,    BLACK,  TRUE,   "                .                                   .            ."
-
-' Space forum thing for the BBS
-DATA BLUE,      BLACK,  TRUE,   "                                         _.oo."
-DATA BLUE,      BLACK,  TRUE,   "                 _.u[[/;:,.         .odMMMMMM'"
-DATA BLUE,      BLACK,  TRUE,   "              .o888UU[[[/;:-.  .o@P^    MMM^"
-DATA BLUE,      BLACK,  TRUE,   "             oN88888UU[[[/;::-.        dP^"
-DATA BLUE,      BLACK,  TRUE,   "            dNMMNN888UU[[[/;:--.   .o@P^"
-DATA BLUE,      BLACK,  TRUE,   "           ,MMMMMMN888UU[[/;::-. o@^"
-DATA BLUE,      BLACK,  TRUE,   "           NNMMMNN888UU[[[/~.o@P^"
-DATA BLUE,      BLACK,  TRUE,   "           888888888UU[[[/o@^-.."
-DATA BLUE,      BLACK,  TRUE,   "          oI8888UU[[[/o@P^:--.."
-DATA BLUE,      BLACK,  TRUE,   "       .@^  YUU[[[/o@^;::---.."
-DATA BLUE,      BLACK,  TRUE,   "     oMP     ^/o@P^;:::---.."
-DATA BLUE,      BLACK,  TRUE,   "  .dMMM    .o@^ ^;::---..."
-DATA BLUE,      BLACK,  TRUE,   " dMMMMMMM@^`       `^^^^"
-DATA BLUE,      BLACK,  TRUE,   "MMMUP^"
-DATA BLUE,      BLACK,  TRUE,   " ^^"
-
-
-
+' Total number of text lines:
+' Format:   fgcolor%, bgcolor%, linefeed%, text$
+' Example:  DATA LIME, BLACK, TRUE, "line of text"
+Textlines:
+DATA 75
+DATA 10, 0, 1,  "line of text"
+DATA  2, 0, 1,  "other line of text"
+DATA  0, 0, 1,  " "
+DATA  0, 0, 1,  " "
+DATA  0, 0, 1,  " "
+DATA  0, 0, 1,  " "
+DATA  0, 0, 1,  " "
+DATA  0, 0, 1,  " "
+DATA  0, 0, 1,  " "
+DATA  0, 0, 1,  " "
+DATA 10, 0, 0,  "********************************************************************************"
+DATA 10, 0, 0,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           "
+DATA  4, 0, 0,  "TOP SECRET SECURITY"
+DATA 10, 0, 0,  " *********************************************************************************"
+DATA 10, 0, 1,  "* 1) CHECK SATELLITE"
+DATA 10, 0, 1,  "* 2) CHECK SPACE SHUTTLE"
+DATA 10, 0, 1,  "* 3) CHECK BOOSTER ROCKETS"
+DATA 10, 0, 1,  "* 4) CHECK MAIN CONTROLS"
+DATA 10, 0, 1,  "* 5) CHECK FUEL TANK"
+DATA 10, 0, 1,  "* 6) ACTIVATE EBS SYSTEM"
+DATA 10, 0, 1,  "* 7) ACTIVATE HES SYSTEM"
+DATA 10, 0, 1,  "* 8) ACTIVATE LAUNCH PREPARATION..."
+DATA 10, 0, 1,  "* 9) RETURN TO GUEST LEVEL SECURITY"
+DATA 10, 0, 0,  "********************************************************************************"
+DATA 10, 0, 1,  ""
+DATA 10, 0, 1,  "          Enter number of choice here -----> "
+DATA  6, 0, 0,  "********************************************************************************"
+DATA  6, 0, 0,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           GUEST LEVEL SECURITY*"
+DATA  6, 0, 0,  "********************************************************************************"
+DATA  6, 0, 0,  "* 1) GET INFO ON THE SPACE SHUTTLE LAUNCH   2) INPUT CODE FOR HIGHER ATHORITY  *"
+DATA  6, 0, 0,  "********************************************************************************"
+DATA 12, 7, 1,  " ,@@@@@@C      @@@@     ,@@@@@@.      1@@@@@@@@@@@@      0@@@@@:"
+DATA 12, 7, 1,  "i@@@@@@@@@     @@@@    i@@@@@@@@,   G@@@@@@@@@@@@@@     @@@@@@@@G"
+DATA 12, 7, 1,  "G@@@t t@@@L    @@@@    @@@@ .@@@@  :@@@8               8@@@1 @@@@"
+DATA 12, 7, 1,  "G@@@t  @@@@    @@@@   8@@@1  C@@@0 :@@@8              ;@@@@  ,@@@@"
+DATA 12, 7, 1,  "C@@@1  ;@@@G   @@@@  ;@@@8    @@@@, G@@@@@@@@@@@@@    @@@@    0@@@L"
+DATA 12, 7, 1,  "L@@@t   @@@@   @@@@  @@@@     .@@@@   f8@@@@@@@@@@@; 8@@@L     @@@@"
+DATA 12, 7, 1,  "C@@@f   :@@@0  @@@@ 0@@@L      0@@@L           .@@@8:@@@@      :@@@@"
+DATA 12, 7, 1,  "C@@@t    @@@@1:@@@@,@@@@        @@@@GGGGGGGCCC0@@@@L@@@@.       8@@@1"
+DATA 12, 7, 1,  "C@@@t     @@@@@@@@C@@@@,        :@@@@@@@@@@@@@@@@@1G@@@C         @@@@"
+DATA 14, 0, 1,  "   .           .        .                     .        .            ."
+DATA 14, 0, 1,  "             .               .    .          .              .   .         ."
+DATA 14, 0, 1,  "               _________________      ____         __________"
+DATA 14, 0, 1,  " .       .    /                 |    /    \    .  |          \ "
+DATA 14, 0, 1,  "     .       /    ______   _____| . /      \      |    ___    |     .     ."
+DATA 14, 0, 1,  "           .  \    \   |   |      /   /__\   \  . |         _/               ."
+DATA 14, 0, 1,  " .     ________>    |  |   | .   /            \   |   |\    \_______    ."
+DATA 14, 0, 1,  "      |            /   |   |    /    ______    \  |   | \           |"
+DATA 14, 0, 1,  "      |___________/    |___|   /____/      \____\ |___|  \__________|    ."
+DATA 14, 0, 1,  "  .     ____    __  . _____   ____      .  __________   .  _________"
+DATA 14, 0, 1,  "       \    \  /  \  /    /  /    \       |          \    /         |      ."
+DATA 14, 0, 1,  "        \    \/    \/    /  /      \      |    ___    |  /    ______|  ."
+DATA 14, 0, 1,  "         \              /  /   /\   \ .   |   |___>   |  \    \ "
+DATA 14, 0, 1,  "   .      \            /  /   /__\   \    |         _/.   \    \            ."
+DATA 14, 0, 1,  "           \    /\    /  /            \   |   |\    \______>    |   ."
+DATA 14, 0, 1,  "            \  /  \  /  /    ______    \  |   | \              /          ."
+DATA 14, 0, 1,  " .       .   \/    \/  /____/      \____\ |___|  \____________/  LS"
+DATA 14, 0, 1,  "                               .                                        ."
+DATA 14, 0, 1,  "     .                           .         .               .                 ."
+DATA 14, 0, 1,  "                .                                   .            ."
+DATA  9, 0, 1,  "                                         _.oo."
+DATA  9, 0, 1,  "                 _.u[[/;:,.         .odMMMMMM'"
+DATA  9, 0, 1,  "              .o888UU[[[/;:-.  .o@P^    MMM^"
+DATA  9, 0, 1,  "             oN88888UU[[[/;::-.        dP^"
+DATA  9, 0, 1,  "            dNMMNN888UU[[[/;:--.   .o@P^"
+DATA  9, 0, 1,  "           ,MMMMMMN888UU[[/;::-. o@^"
+DATA  9, 0, 1,  "           NNMMMNN888UU[[[/~.o@P^"
+DATA  9, 0, 1,  "           888888888UU[[[/o@^-.."
+DATA  9, 0, 1,  "          oI8888UU[[[/o@P^:--.."
+DATA  9, 0, 1,  "       .@^  YUU[[[/o@^;::---.."
+DATA  9, 0, 1,  "     oMP     ^/o@P^;:::---.."
+DATA  9, 0, 1,  "  .dMMM    .o@^ ^;::---..."
+DATA  9, 0, 1,  " dMMMMMMM@^`       `^^^^"
+DATA  9, 0, 1,  "MMMUP^"
+DATA  9, 0, 1,  " ^^"
 
 
 Events:
@@ -331,20 +326,20 @@ SUB Disk (seconds%)
 ' TODO: Simulate disk access sounds for number of seconds
 END SUB
 
-SUB Lineout (lines$(), numlines%)
-' TODO: Redo for accessing the array of lines instead
+SUB Lineout (startline%, numlines%)
+' Perform a lineout of the requested text lines.
     sounds$ = "T255MSMFO4L64A-"
     IF slowbaud% THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
-    FOR i = 1 TO numlines%
-        outpt$ = lines$(i)
-        FOR j = 1 TO LEN(outpt$)
-            char$ = MID$(outpt$, j, 1)
+    FOR i = startline% TO numlines%
+        COLOR linedata(i).fgcolor, linedata(i).bgcolor
+        FOR j = 1 TO LEN(lines(i))
+            char$ = MID$(lines(i), j, 1)
             PRINT char$;
             IF char$ <> " " THEN PLAY sounds$
             Pause (1)
         NEXT j
-        PRINT
+        IF linedata(i).linefeed THEN PRINT
         Pause (5)
     NEXT i
 END SUB

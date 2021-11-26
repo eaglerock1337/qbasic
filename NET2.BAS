@@ -123,9 +123,9 @@ CPM:
 ' Boot Routine
 CLS
 COLOR GREEN, BLACK
-Delay (2)
+Delay(4)
 PRINT "CP/M 2.2 Copyright 1979 (c) by Digital Research"
-Disk (1)
+Disk(1)
 
 Prompt:
 ' Disk Prompt
@@ -137,12 +137,10 @@ SELECT CASE cmd$
     CASE "STAT"
         IF cpmdisk$ = "B" THEN
             PRINT "STAT?"
-            Delay (2)
+            Delay(4)
         ELSE
-            PRINT "A: R/O, Space: 78k"
-            Delay (3)
-            PRINT "B: R/W, Space:" + STR$(cpmspace%) + "k"
-            Delay (3)
+            PRINT "A: R/O, Space: 78k";: Delay(6): PRINT: Delay(6)
+            PRINT "B: R/W, Space:" + STR$(cpmspace%) + "k";: Delay(6): PRINT: Delay(6)
         END IF
 
     CASE "DIR"
@@ -152,8 +150,11 @@ SELECT CASE cmd$
     CASE "QUIT"
         END
 
+    CASE "SATURN"
+        CALL Lineout(62, Totallines)
+
     CASE "TEST"
-        CALL Lineout(1, 75)
+        CALL Lineout(1, Totallines)
 
     CASE "COLOR"
         IF colorterm THEN
@@ -169,9 +170,24 @@ SELECT CASE cmd$
             slowbaud = TRUE
         END IF
 
+    CASE "REMOTE"
+        IF remote THEN
+            remote = FALSE
+        ELSE
+            remote = TRUE
+        END IF
+
+    CASE "A:"
+        cpmdisk$ = "A"
+        Delay(1)
+
+    CASE "B:"
+        cpmdisk$ = "B"
+        Delay(1)
+
     CASE ELSE
         PRINT cmd$ + "?"
-        Delay (2)
+        Delay(4)
 
 END SELECT
 
@@ -230,7 +246,7 @@ XPLOD:
 ' Format:   fgcolor%, bgcolor%, linefeed%, text$
 ' Example:  DATA LIME, BLACK, TRUE, "line of text"
 Textlines:
-DATA 75
+DATA 94
 DATA 10, 0, 1,  "line of text"
 DATA  2, 0, 1,  "other line of text"
 DATA  0, 0, 1,  " "
@@ -244,7 +260,8 @@ DATA  0, 0, 1,  " "
 DATA 10, 0, 0,  "********************************************************************************"
 DATA 10, 0, 0,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           "
 DATA  4, 0, 0,  "TOP SECRET SECURITY"
-DATA 10, 0, 0,  " *********************************************************************************"
+DATA 10, 0, 0,  " *"
+DATA 10, 0, 0,  "********************************************************************************"
 DATA 10, 0, 1,  "* 1) CHECK SATELLITE"
 DATA 10, 0, 1,  "* 2) CHECK SPACE SHUTTLE"
 DATA 10, 0, 1,  "* 3) CHECK BOOSTER ROCKETS"
@@ -255,7 +272,7 @@ DATA 10, 0, 1,  "* 7) ACTIVATE HES SYSTEM"
 DATA 10, 0, 1,  "* 8) ACTIVATE LAUNCH PREPARATION..."
 DATA 10, 0, 1,  "* 9) RETURN TO GUEST LEVEL SECURITY"
 DATA 10, 0, 0,  "********************************************************************************"
-DATA 10, 0, 1,  ""
+DATA 10, 0, 1,  " "
 DATA 10, 0, 1,  "          Enter number of choice here -----> "
 DATA  6, 0, 0,  "********************************************************************************"
 DATA  6, 0, 0,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           GUEST LEVEL SECURITY*"
@@ -287,25 +304,43 @@ DATA 14, 0, 1,  "         \              /  /   /\   \ .   |   |___>   |  \    \
 DATA 14, 0, 1,  "   .      \            /  /   /__\   \    |         _/.   \    \            ."
 DATA 14, 0, 1,  "           \    /\    /  /            \   |   |\    \______>    |   ."
 DATA 14, 0, 1,  "            \  /  \  /  /    ______    \  |   | \              /          ."
-DATA 14, 0, 1,  " .       .   \/    \/  /____/      \____\ |___|  \____________/  LS"
+DATA 14, 0, 1,  " .       .   \/    \/  /____/      \____\ |___|  \____________/"
 DATA 14, 0, 1,  "                               .                                        ."
 DATA 14, 0, 1,  "     .                           .         .               .                 ."
 DATA 14, 0, 1,  "                .                                   .            ."
-DATA  9, 0, 1,  "                                         _.oo."
-DATA  9, 0, 1,  "                 _.u[[/;:,.         .odMMMMMM'"
-DATA  9, 0, 1,  "              .o888UU[[[/;:-.  .o@P^    MMM^"
-DATA  9, 0, 1,  "             oN88888UU[[[/;::-.        dP^"
-DATA  9, 0, 1,  "            dNMMNN888UU[[[/;:--.   .o@P^"
-DATA  9, 0, 1,  "           ,MMMMMMN888UU[[/;::-. o@^"
-DATA  9, 0, 1,  "           NNMMMNN888UU[[[/~.o@P^"
-DATA  9, 0, 1,  "           888888888UU[[[/o@^-.."
-DATA  9, 0, 1,  "          oI8888UU[[[/o@P^:--.."
-DATA  9, 0, 1,  "       .@^  YUU[[[/o@^;::---.."
-DATA  9, 0, 1,  "     oMP     ^/o@P^;:::---.."
-DATA  9, 0, 1,  "  .dMMM    .o@^ ^;::---..."
-DATA  9, 0, 1,  " dMMMMMMM@^`       `^^^^"
-DATA  9, 0, 1,  "MMMUP^"
-DATA  9, 0, 1,  " ^^"
+DATA  6, 0, 1,  "                                         _.oo."
+DATA  9, 0, 0,  "                 _.u[[/;:,.         "
+DATA  6, 0, 1,  ".odMMMMMM'"
+DATA  9, 0, 0,  "              .o888UU[[[/;:-.  "
+DATA  6, 0, 1,  ".o@P^    MMM^"
+DATA  9, 0, 0,  "             oN88888UU[[[/;::-.        "
+DATA  6, 0, 1,  "dP^"
+DATA  9, 0, 0,  "            dNMMNN888UU[[[/;:--.   "
+DATA  6, 0, 1,  ".o@P^"
+DATA  9, 0, 0,  "           ,MMMMMMN888UU[[/;::-. "
+DATA  6, 0, 1,  "o@^"
+DATA  9, 0, 0,  "           NNMMMNN888UU[[[/~."
+DATA  6, 0, 1,  "o@P^"
+DATA  9, 0, 0,  "           888888888UU[[[/"
+DATA  6, 0, 0,  "o@^"
+DATA  9, 0, 1,  "-.."
+DATA  9, 0, 0,  "          oI8888UU[[[/"
+DATA  6, 0, 0,  "o@P^"
+DATA  9, 0, 1,  ":--.."
+DATA  6, 0, 0,  "       .@^  "
+DATA  9, 0, 0,  "YUU[[[/"
+DATA  6, 0, 0,  "o@^"
+DATA  9, 0, 1,  ";::---.."
+DATA  6, 0, 0,  "     oMP     "
+DATA  9, 0, 0,  "^/"
+DATA  6, 0, 0,  "o@P^"
+DATA  9, 0, 1,  ";:::---.."
+DATA  6, 0, 0,  "  .dMMM    .o@^ "
+DATA  9, 0, 1,  "^;::---..."
+DATA  6, 0, 0,  " dMMMMMMM@^`       "
+DATA  9, 0, 1,  "`^^^^"
+DATA  6, 0, 1,  "MMMUP^"
+DATA  6, 0, 1,  " ^^"
 
 
 Events:
@@ -331,7 +366,7 @@ DATA 0      ' Number of outputs
 
 SUB Delay (ticks%)
 ' Delay the local terminal for number of ticks
-    iter% = tickspeed% * ticks% * 25
+    iter% = tickspeed% * ticks% * 12
     FOR k = 1 TO iter%
     NEXT k
 END SUB
@@ -340,21 +375,27 @@ SUB Disk (seconds%)
 ' TODO: Simulate disk access sounds for number of seconds
 END SUB
 
-SUB Lineout (startline%, numlines%)
+SUB Lineout (startline%, endline%)
 ' Perform a lineout of the requested text lines.
     sounds$ = "T255MSMFO4L64A-"
     IF slowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
-    FOR i = startline% TO numlines%
+    FOR i = startline% TO endline%
         IF colorterm = TRUE THEN COLOR linedata(i).fgcolor, linedata(i).bgcolor
-        FOR j = 1 TO LEN(lines(i))
-            char$ = MID$(lines(i), j, 1)
-            PRINT char$;
-            IF char$ <> " " THEN PLAY sounds$
-            Pause (1)
-        NEXT j
+        IF remote THEN
+            FOR j = 1 TO LEN(lines(i))
+                char$ = MID$(lines(i), j, 1)
+                PRINT char$;
+                IF char$ <> " " THEN PLAY sounds$
+                Pause(1)
+            NEXT j
+            Delay(3)
+        ELSE
+            If linedata(i).linefeed THEN Delay(2)
+            PRINT lines(i);
+            If linedata(i).linefeed THEN Delay(2)
+        END IF
         IF linedata(i).linefeed THEN PRINT
-        Pause (5)
     NEXT i
 END SUB
 

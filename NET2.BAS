@@ -4,8 +4,6 @@
 'Version 2.0 - November 21st, 2021
 
 
-REM $DYNAMIC
-
 ' Subroutine declarations
 DECLARE SUB Lineout (startline%, numlines%)
 DECLARE SUB Pause (ticks%)

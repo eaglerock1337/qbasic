@@ -153,7 +153,6 @@ SELECT CASE cmd$
         END
 
     CASE "TEST"
-        slowbaud = FALSE
         CALL Lineout(1, 75)
 
     CASE "COLOR"
@@ -161,6 +160,13 @@ SELECT CASE cmd$
             colorterm = FALSE
         ELSE
             colorterm = TRUE
+        END IF
+
+    CASE "BAUD"
+        IF slowbaud THEN
+            slowbaud = FALSE
+        ELSE
+            slowbaud = TRUE
         END IF
 
     CASE ELSE
@@ -337,10 +343,10 @@ END SUB
 SUB Lineout (startline%, numlines%)
 ' Perform a lineout of the requested text lines.
     sounds$ = "T255MSMFO4L64A-"
-    IF slowbaud% THEN sounds$ = "T255MSMFO5L64EO4A-P64"
+    IF slowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
     FOR i = startline% TO numlines%
-        COLOR linedata(i).fgcolor, linedata(i).bgcolor
+        IF colorterm = TRUE THEN COLOR linedata(i).fgcolor, linedata(i).bgcolor
         FOR j = 1 TO LEN(lines(i))
             char$ = MID$(lines(i), j, 1)
             PRINT char$;
@@ -355,7 +361,7 @@ END SUB
 SUB Pause (ticks%)
 ' Pause the remote terminal for x ticks'
     iter% = tickspeed% * ticks%
-    IF slowbaud% THEN iter% = iter% * 5
+    IF slowbaud THEN iter% = iter% * 5
     FOR k = 1 TO iter%
     NEXT k
 END SUB

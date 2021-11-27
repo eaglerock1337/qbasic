@@ -3,19 +3,21 @@
 'Original incomplete version - July 1, 1998
 'Version 2.0 - November 21st, 2021
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 ' Subroutine declarations
-DECLARE SUB Lineout (startline%, numlines%)
-DECLARE SUB Pause (ticks%)
-DECLARE SUB Delay (ticks%)
-DECLARE SUB Disk (seconds%)
-DECLARE SUB Diskpause (ticks%)
-DECLARE SUB Disksound (ticks%)
+DECLARE SUB Delay (ticks%)                      ' Delay by a set number of ticks
+DECLARE SUB Setdisk (newdisk$)                     ' Set the CP/M disk drive to specified disk
+DECLARE SUB Disk (seconds%)                     ' Simulate disk access sounds for number of seconds
+DECLARE SUB Diskpause (ticks%)                  ' Play a sound pause for a number of ticks (from 2^0 to 2^4)
+DECLARE SUB Disksound (ticks%)                  ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
+DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
+DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
 
 ' Game constants
 CONST tickspeed% = 6            ' The configured tickspeed for screen output
 CONST tickrate% = 32            ' The number of ticks per second for disk access time
-CONST disksize% = 360           ' The size of the B: disk in kb
+CONST disksize% = 980           ' The size of the B: disk in kb
 
 ' Boolean constants
 CONST TRUE = 1
@@ -51,6 +53,8 @@ DIM SHARED remote               ' If the terminal is outputting remote data
 DIM SHARED colorterm            ' If terminal color is enabled
 DIM SHARED defaultcolor         ' The default terminal color
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
+
 ' Custom data types
 TYPE TextData                   ' Text string metadata
     fgcolor AS INTEGER          ' Text foreground color (if enabled)
@@ -85,6 +89,7 @@ TYPE GameFile                   ' A file inside the simulator
     event AS INTEGER            ' The triggered event if uploaded to the target server
 END TYPE
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 ' Read game data
 RESTORE Textlines
@@ -100,6 +105,7 @@ FOR l = 1 TO Totallines
     READ lines(l)
 NEXT l
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 Initialize:
 ' Initializes all variables for a new game.
@@ -115,10 +121,12 @@ remote = FALSE
 colorterm = FALSE
 defaultcolor = GREEN
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 Menu:
 ' Main game menu
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 CPM:
 ' Literally emulate CP/M enough to make it convincing.
@@ -126,9 +134,12 @@ CPM:
 ' Boot Routine
 CLS
 COLOR GREEN, BLACK
-Disk (3)
-PRINT "CP/M 2.2 Copyright 1979 (c) by Digital Research"
+Disk (4)
+Lineout(1, 3)
+Delay (4)
+PRINT
 Disk (2)
+Delay (4)
 
 Prompt:
 ' Disk Prompt
@@ -137,28 +148,45 @@ COLOR GREEN, BLACK
 PRINT cpmdisk$;
 LINE INPUT ">", cmd$
 SELECT CASE cmd$
-    CASE "STAT"
+    CASE "STAT"         ' Provides disk usage information
         IF cpmdisk$ = "B" THEN
             PRINT "STAT?"
             Delay (4)
         ELSE
-            PRINT "A: R/O, Space: 78k"; : Delay (6): PRINT : Delay (6)
-            PRINT "B: R/W, Space:" + STR$(cpmspace%) + "k"; : Delay (6): PRINT : Delay (6)
+            Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "78k": Delay (6)
+            readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14) + 1
+            PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
+            PRINT STR$(cpmspace%) + "k"; : PRINT : PRINT
         END IF
 
-    CASE "DIR"
+    CASE "DIR"          ' Provides a directory listing for active drive
         PRINT "DIR isn't written yet."
         ' TAB can help with string formatting
 
-    CASE "QUIT"
+    CASE "QUIT"         ' Quit the game
         END
 
+    ' Debug commands for STAT command
+    CASE "FULLDISK"
+        cpmspace% = 14
+
+    CASE "HALFDISK"
+        cpmspace% = INT(disksize% / 2)
+
+    CASE "FREEDISK"
+        cpmspace% = disksize%
+
+    CASE "RANDDISK"
+        cpmspace% = INT(RND * disksize% + 1)
+
+    ' Debug commands for Lineout subroutine
     CASE "SATURN"
         CALL Lineout(62, Totallines)
 
     CASE "TEST"
         CALL Lineout(1, Totallines)
 
+    ' Debug command for toggling terminal color
     CASE "COLOR"
         IF colorterm THEN
             colorterm = FALSE
@@ -166,6 +194,7 @@ SELECT CASE cmd$
             colorterm = TRUE
         END IF
 
+    ' Debug command for toggling baud rate
     CASE "BAUD"
         IF slowbaud THEN
             slowbaud = FALSE
@@ -173,6 +202,7 @@ SELECT CASE cmd$
             slowbaud = TRUE
         END IF
 
+    ' Debug command for toggling remote output
     CASE "REMOTE"
         IF remote THEN
             remote = FALSE
@@ -180,13 +210,17 @@ SELECT CASE cmd$
             remote = TRUE
         END IF
 
-    CASE "A:"
-        cpmdisk$ = "A"
-        Disk (1)
+    ' Debug the Delay() tickrate
+    CASE "DELAY"
+        Delay (32)
 
-    CASE "B:"
-        cpmdisk$ = "B"
-        Disk (1)
+    CASE "A:"           ' Change to A drive
+        Setdisk ("A")
+        Delay (4)
+
+    CASE "B:"           ' Change to B drive
+        Setdisk ("B")
+        Delay (4)
 
     CASE ""
         Delay (4)
@@ -206,6 +240,7 @@ GOTO Prompt
 ' ERA - Erase File
 ' A: STAT.COM, HELP.COM, VTEE.COM, MENU.COM, SCORE.COM
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 VTEE100:
 ' V-TEE 100 - The Video Terminal Emulator Emulator
@@ -217,6 +252,7 @@ VTEE100:
 ' Color Terminal Support - Download illegally
 ' Favorites - Address book for servers found on the Internet
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 HACCBBS:
 ' The Hacker and Computing Connoisseur Bulletin Board System.
@@ -226,33 +262,41 @@ HACCBBS:
 ' Topics - Movies, Space, CPM, MSDOS, V-TEE
 ' Files - .GRB file formats (garbage), .DAT (used for tasks), .COM (executables)
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 BellFone:
 ' BellFone Customer Services Portal
 ' For customers of the BellFone Telephone Services Corporation
 ' Which you're not, so go 'way. Shoo.
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 Gateway:
 ' The NASA Public Gateway
 ' Your tax dollars paid for this.
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 CPN:
 ' NASA's Classified Private Network (CPN)
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 XPLOD:
 ' The X-Series Probe Launcer and Orbiting Director, Version 3.
 ' IBM calls it the X-PLOD-3. That's totally not telling.
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 ' Individual lines of text data
 ' Total number of text lines:
 ' Format:   fgcolor%, bgcolor%, linefeed%, text$
 ' Example:  DATA LIME, BLACK, TRUE, "line of text"
 Textlines:
-DATA 94
+DATA 97
+DATA  2, 0, 1,  "63K CP/M"
+DATA  2, 0, 1,  "Version 2.2mits (07/28/80)"
+DATA  2, 0, 1,  "Copyright 1980 by Burcon Inc."
 DATA 10, 0, 1,  "line of text"
 DATA  2, 0, 1,  "other line of text"
 DATA  0, 0, 1,  " "
@@ -349,6 +393,7 @@ DATA  9, 0, 1,  "`^^^^"
 DATA  6, 0, 1,  "MMMUP^"
 DATA  6, 0, 1,  " ^^"
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 Events:
 ' A single formatted response from a server.
@@ -356,25 +401,30 @@ Events:
 DATA 1      ' Number of outputs
 DATA "event", 1, 2, 3, "value"
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 Headers:    ' A formatted header for use in multiple screens
 ' Format:
 DATA 0      ' Number of headers
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 Screens:    ' A formatted game screen with header and body
 ' Format: header%, startline%, numlines%
 DATA 0      ' Number of game screens
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
 
 GameFiles:  ' Data files inside the game
 ' Format: filename$, size%, server%, event%
 DATA 0      ' Number of outputs
 
+'-=-=-=-=-=-=-=-=-=-=-=-'
+
 SUB Delay (ticks%)
 ' Delay the local terminal for number of ticks
-    iter% = tickspeed% * ticks% * 12
-    FOR k = 1 TO iter%
+    iter& = tickspeed% * ticks% * 100
+    FOR k = 1 TO iter&
     NEXT k
 END SUB
 
@@ -390,77 +440,52 @@ SUB Disk (seconds%)
         ' Pick a random disk event
         roll% = INT(RND * 100)
         SELECT CASE roll%
-            CASE IS < 50
-                ' A single disk sound
-                size% = 2 ^ INT(RND * 3 + 3)    ' 2^3 - 2^5
+            CASE IS < 60    ' One long access sound
+                Disksound (32)
+                ticks% = ticks% - 32
 
-            CASE IS < 60    ' H sound (dit-dit-dit-dit)
-                FOR i = 1 TO 4
-                    Disksound (2)
-                    Diskpause (2)
-                NEXT i
-                ticks% = ticks% - 16
+            CASE IS < 85    ' One quick access sound
+                Disksound (4)
+                ticks% = ticks% - 4
 
-            CASE IS < 70    ' S sound (dah-dah-dah)
+            CASE IS < 90    ' Three quick access sounds
                 FOR i = 1 TO 3
-                    Disksound (8)
-                    Diskpause (2)
+                    Disksound (4)
+                    Diskpause (8)
                 NEXT i
-                Diskpause (2)
-                ticks% = ticks% - 32
+                ticks% = ticks% - 36
 
-            CASE IS < 80    ' L sound (dit-dah-dit-dit)
+            CASE IS < 95    ' Quick-long-quick sequence
                 Disksound (4)
-                Diskpause (2)
-                Disksound (8)
-                Diskpause (2)
+                Diskpause (8)
+                Disksound (32)
+                Diskpause (8)
                 Disksound (4)
-                Diskpause (2)
-                Disksound (4)
-                Diskpause (6)
-                ticks% = ticks% - 32
+                ticks% = ticks% - 56
 
-            CASE IS < 90    ' F sound (dah-dit-dah-dah)
-                Disksound (4)
-                Diskpause (2)
-                Disksound (2)
-                Diskpause (2)
-                Disksound (4)
-                Diskpause (2)
-                Disksound (4)
-                Diskpause (4)
-                ticks% = ticks% - 24
-
-            CASE IS < 95    ' W sound (dit-dah-dah)
-                Disksound (4)
-                Diskpause (2)
-                Disksound (8)
-                Diskpause (2)
-                Disksound (8)
-                ticks% = ticks% - 24
-
-            CASE ELSE       ' M sound (dah-dah)
-                Disksound (8)
-                Diskpause (4)
-                Disksound (8)
-                Diskpause (4)
-                ticks% = ticks% - 24
+            CASE ELSE       ' Two long access sounds
+                Disksound (32)
+                Diskpause (8)
+                Disksound (32)
+                Diskpause (8)
+                ticks% = ticks% - 80
         END SELECT
     LOOP
+    Delay (seconds%)
 END SUB
 
 SUB Diskpause (ticks%)
 ' Play a sound pause for a number of ticks (from 2^0 to 2^4)
-    PLAY "T255MSMFP" + STR$(INT(tickrate% / ticks%))
+    PLAY "T255P" + STR$(INT(tickrate% / ticks%))
 END SUB
 
 SUB Disksound (ticks%)
 ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
-    PLAY "T255MSMFO1L" + STR$(INT(tickrate% / ticks%)) + "A-"
+    PLAY "T255MLMFO1L" + STR$(INT(tickrate% / ticks%)) + "A-"
 END SUB
 
 SUB Lineout (startline%, endline%)
-' Perform a lineout of the requested text lines.
+' Perform a lineout of the requested text lines
     sounds$ = "T255MSMFO4L64A-"
     IF slowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
@@ -484,10 +509,19 @@ SUB Lineout (startline%, endline%)
 END SUB
 
 SUB Pause (ticks%)
-' Pause the remote terminal for x ticks'
+' Pause the remote terminal for x ticks
     iter% = tickspeed% * ticks%
     IF slowbaud THEN iter% = iter% * 5
     FOR k = 1 TO iter%
     NEXT k
+END SUB
+
+SUB Setdisk (newdisk$)
+' Set the CP/M disk drive to specified disk
+    IF cpmdisk$ <> newdisk$ THEN
+        Disk (2)
+        Delay (25)
+    END IF
+    cpmdisk$ = newdisk$
 END SUB
 

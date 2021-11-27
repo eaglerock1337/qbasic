@@ -9,9 +9,12 @@ DECLARE SUB Lineout (startline%, numlines%)
 DECLARE SUB Pause (ticks%)
 DECLARE SUB Delay (ticks%)
 DECLARE SUB Disk (seconds%)
+DECLARE SUB Diskpause (ticks%)
+DECLARE SUB Disksound (ticks%)
 
 ' Game constants
 CONST tickspeed% = 6            ' The configured tickspeed for screen output
+CONST tickrate% = 32            ' The number of ticks per second for disk access time
 CONST disksize% = 360           ' The size of the B: disk in kb
 
 ' Boolean constants
@@ -123,9 +126,9 @@ CPM:
 ' Boot Routine
 CLS
 COLOR GREEN, BLACK
-Delay(4)
+Disk (3)
 PRINT "CP/M 2.2 Copyright 1979 (c) by Digital Research"
-Disk(1)
+Disk (2)
 
 Prompt:
 ' Disk Prompt
@@ -137,10 +140,10 @@ SELECT CASE cmd$
     CASE "STAT"
         IF cpmdisk$ = "B" THEN
             PRINT "STAT?"
-            Delay(4)
+            Delay (4)
         ELSE
-            PRINT "A: R/O, Space: 78k";: Delay(6): PRINT: Delay(6)
-            PRINT "B: R/W, Space:" + STR$(cpmspace%) + "k";: Delay(6): PRINT: Delay(6)
+            PRINT "A: R/O, Space: 78k"; : Delay (6): PRINT : Delay (6)
+            PRINT "B: R/W, Space:" + STR$(cpmspace%) + "k"; : Delay (6): PRINT : Delay (6)
         END IF
 
     CASE "DIR"
@@ -179,15 +182,18 @@ SELECT CASE cmd$
 
     CASE "A:"
         cpmdisk$ = "A"
-        Delay(1)
+        Disk (1)
 
     CASE "B:"
         cpmdisk$ = "B"
-        Delay(1)
+        Disk (1)
+
+    CASE ""
+        Delay (4)
 
     CASE ELSE
         PRINT cmd$ + "?"
-        Delay(4)
+        Delay (4)
 
 END SELECT
 
@@ -266,7 +272,7 @@ DATA 10, 0, 1,  "* 1) CHECK SATELLITE"
 DATA 10, 0, 1,  "* 2) CHECK SPACE SHUTTLE"
 DATA 10, 0, 1,  "* 3) CHECK BOOSTER ROCKETS"
 DATA 10, 0, 1,  "* 4) CHECK MAIN CONTROLS"
-DATA 10, 0, 1,  "* 5) CHECK FUEL TANK"
+DATA 10, 0, 1,  "* 5) CHECK FUEL T7ANK"
 DATA 10, 0, 1,  "* 6) ACTIVATE EBS SYSTEM"
 DATA 10, 0, 1,  "* 7) ACTIVATE HES SYSTEM"
 DATA 10, 0, 1,  "* 8) ACTIVATE LAUNCH PREPARATION..."
@@ -324,7 +330,8 @@ DATA  6, 0, 1,  "o@P^"
 DATA  9, 0, 0,  "           888888888UU[[[/"
 DATA  6, 0, 0,  "o@^"
 DATA  9, 0, 1,  "-.."
-DATA  9, 0, 0,  "          oI8888UU[[[/"
+DATA  6, 0, 0,  "          o"
+DATA  9, 0, 0,  "I8888UU[[[/"
 DATA  6, 0, 0,  "o@P^"
 DATA  9, 0, 1,  ":--.."
 DATA  6, 0, 0,  "       .@^  "
@@ -372,7 +379,84 @@ SUB Delay (ticks%)
 END SUB
 
 SUB Disk (seconds%)
-' TODO: Simulate disk access sounds for number of seconds
+' Simulate disk access sounds for number of seconds
+    ticks% = seconds% * tickrate%
+    DO WHILE ticks% > 0
+        ' Pause before/between disk operations
+        pausetime% = 2 ^ INT(RND * 3 + 3)       ' 2^3 - 2^5
+        Diskpause (pausetime%)
+        ticks% = ticks% - pausetime%
+
+        ' Pick a random disk event
+        roll% = INT(RND * 100)
+        SELECT CASE roll%
+            CASE IS < 50
+                ' A single disk sound
+                size% = 2 ^ INT(RND * 3 + 3)    ' 2^3 - 2^5
+
+            CASE IS < 60    ' H sound (dit-dit-dit-dit)
+                FOR i = 1 TO 4
+                    Disksound (2)
+                    Diskpause (2)
+                NEXT i
+                ticks% = ticks% - 16
+
+            CASE IS < 70    ' S sound (dah-dah-dah)
+                FOR i = 1 TO 3
+                    Disksound (8)
+                    Diskpause (2)
+                NEXT i
+                Diskpause (2)
+                ticks% = ticks% - 32
+
+            CASE IS < 80    ' L sound (dit-dah-dit-dit)
+                Disksound (4)
+                Diskpause (2)
+                Disksound (8)
+                Diskpause (2)
+                Disksound (4)
+                Diskpause (2)
+                Disksound (4)
+                Diskpause (6)
+                ticks% = ticks% - 32
+
+            CASE IS < 90    ' F sound (dah-dit-dah-dah)
+                Disksound (4)
+                Diskpause (2)
+                Disksound (2)
+                Diskpause (2)
+                Disksound (4)
+                Diskpause (2)
+                Disksound (4)
+                Diskpause (4)
+                ticks% = ticks% - 24
+
+            CASE IS < 95    ' W sound (dit-dah-dah)
+                Disksound (4)
+                Diskpause (2)
+                Disksound (8)
+                Diskpause (2)
+                Disksound (8)
+                ticks% = ticks% - 24
+
+            CASE ELSE       ' M sound (dah-dah)
+                Disksound (8)
+                Diskpause (4)
+                Disksound (8)
+                Diskpause (4)
+                ticks% = ticks% - 24
+        END SELECT
+    LOOP
+END SUB
+
+SUB Diskpause (ticks%)
+' Play a sound pause for a number of ticks (from 2^0 to 2^4)
+    PLAY "T255MSMFP" + STR$(INT(tickrate% / ticks%))
+END SUB
+
+SUB Disksound (ticks%)
+' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
+    PLAY "T255MSMFO1L" + STR$(INT(tickrate% / ticks%)) + "A-"
 END SUB
 
 SUB Lineout (startline%, endline%)
@@ -387,13 +471,13 @@ SUB Lineout (startline%, endline%)
                 char$ = MID$(lines(i), j, 1)
                 PRINT char$;
                 IF char$ <> " " THEN PLAY sounds$
-                Pause(1)
+                Pause (1)
             NEXT j
-            Delay(3)
+            Delay (3)
         ELSE
-            If linedata(i).linefeed THEN Delay(2)
+            IF linedata(i).linefeed THEN Delay (2)
             PRINT lines(i);
-            If linedata(i).linefeed THEN Delay(2)
+            IF linedata(i).linefeed THEN Delay (2)
         END IF
         IF linedata(i).linefeed THEN PRINT
     NEXT i

@@ -7,11 +7,12 @@
 
 ' Subroutine declarations
 DECLARE SUB Delay (ticks%)                      ' Delay by a set number of ticks
-DECLARE SUB Setdisk (newdisk$)                     ' Set the CP/M disk drive to specified disk
+DECLARE SUB Setdisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 DECLARE SUB Disk (seconds%)                     ' Simulate disk access sounds for number of seconds
 DECLARE SUB Diskpause (ticks%)                  ' Play a sound pause for a number of ticks (from 2^0 to 2^4)
 DECLARE SUB Disksound (ticks%)                  ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
 DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
+DECLARE SUB Linedelay ()                        ' Delay the local terminal for a linefeed
 DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
 
 ' Game constants
@@ -135,7 +136,7 @@ CPM:
 CLS
 COLOR GREEN, BLACK
 Disk (4)
-Lineout(1, 3)
+CALL Lineout(1, 3)
 Delay (4)
 PRINT
 Disk (2)
@@ -181,7 +182,7 @@ SELECT CASE cmd$
 
     ' Debug commands for Lineout subroutine
     CASE "SATURN"
-        CALL Lineout(62, Totallines)
+        CALL Lineout(65, Totallines)
 
     CASE "TEST"
         CALL Lineout(1, Totallines)
@@ -498,14 +499,20 @@ SUB Lineout (startline%, endline%)
                 IF char$ <> " " THEN PLAY sounds$
                 Pause (1)
             NEXT j
-            Delay (3)
+            CALL Linedelay
         ELSE
-            IF linedata(i).linefeed THEN Delay (2)
+            IF linedata(i).linefeed THEN CALL Linedelay
             PRINT lines(i);
-            IF linedata(i).linefeed THEN Delay (2)
+            IF linedata(i).linefeed THEN CALL Linedelay
         END IF
         IF linedata(i).linefeed THEN PRINT
     NEXT i
+END SUB
+
+SUB Linedelay ()
+' Delay the local terminal for a linefeed
+    FOR k = 1 TO tickspeed% * 25
+    NEXT k
 END SUB
 
 SUB Pause (ticks%)

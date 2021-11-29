@@ -49,6 +49,7 @@ DIM SHARED cpmdisk$             ' Current CP/M Disk Drive
 DIM SHARED cpmfiles$(12)        ' The list of files on the B: drive
 DIM SHARED cpmfilenum%          ' Number of files on B: drive
 DIM SHARED cpmspace%            ' Available B: drive space in KB
+DIM SHARED ramsize%             ' 
 DIM SHARED slowbaud             ' If the terminal runs at 300 baud
 DIM SHARED remote               ' If the terminal is outputting remote data
 DIM SHARED colorterm            ' If terminal color is enabled
@@ -92,6 +93,14 @@ END TYPE
 
 TYPE GameServer                 ' A file server inside the simulator
     servername AS STRING * 20   ' Name of the server
+    address AS STRING * 11      ' Phone number of the server
+    model AS INTEGER            ' The model computer of the server
+    online AS INTEGER           ' Whether the server is online
+END TYPE
+
+TYPE GameComputer               ' Different model computers inside the game
+    modelname AS STRING * 20    ' Display name of the computer
+    software AS STRING * 50     ' Name of file server program
 END TYPE
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
@@ -112,15 +121,14 @@ NEXT l
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-Initialize:
-' Initializes all variables for a new game.
-
+Initialize:     ' Initializes all variables for a new game.
 
 ' Initialize global variables
 ERASE cpmfiles$
 cpmdisk$ = "A"
 cpmfilenum% = 0
 cpmspace% = disksize%
+ramsize% = 20
 slowbaud = TRUE
 remote = FALSE
 colorterm = FALSE
@@ -128,13 +136,17 @@ defaultcolor = GREEN
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-Menu:
-' Main game menu
+Menu:           ' Main game menu
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-CPM:
-' Literally emulate CP/M enough to make it convincing.
+Intro:          ' Game Introduction
+
+' 
+
+'-=-=-=-=-=-=-=-=-=-=-=-'
+
+CPM:            ' Literally emulate CP/M enough to make it convincing.
 
 ' Boot Routine
 CLS
@@ -146,9 +158,7 @@ PRINT
 Disk (2)
 Delay (4)
 
-Prompt:
-' Disk Prompt
-
+Prompt:         ' CP/M Disk Prompt
 COLOR GREEN, BLACK
 PRINT cpmdisk$;
 LINE INPUT ">", cmd$
@@ -158,7 +168,7 @@ SELECT CASE cmd$
             PRINT "STAT?"
             Delay (4)
         ELSE
-            Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "78k": Delay (6)
+            Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
             readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14) + 1
             PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
             PRINT STR$(cpmspace%) + "k"; : PRINT : PRINT
@@ -168,12 +178,23 @@ SELECT CASE cmd$
         PRINT "DIR isn't written yet."
         ' TAB can help with string formatting
 
+    CASE "MONITOR"      ' System Monitor
+        PRINT "MONITOR isn't written yet."
+
+    CASE "MOVCPM"       ' Create 63K CP/M Image
+        PRINT "MOVCPM isn't written yet."
+
+    CASE "SYSGEN"       ' System
+
+    CASE "SCORE"        ' Get a score of how you're doing
+        PRINT "SCORE isn't written yet."
+
     CASE "QUIT"         ' Quit the game
         END
 
     ' Debug commands for STAT command
     CASE "FULLDISK"
-        cpmspace% = 14
+        cpmspace% = 16
 
     CASE "HALFDISK"
         cpmspace% = INT(disksize% / 2)
@@ -243,13 +264,12 @@ GOTO Prompt
 ' B: - Switch to B: Disk - Contains
 ' DIR - List Directory
 ' ERA - Erase File
-' A: STAT.COM, HELP.COM, VTEE.COM, MENU.COM, SCORE.COM
+' A: STAT.COM, HELP.COM, MODEM.COM, MENU.COM, SCORE.COM, HINT.COM
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-VTEE100:
-' V-TEE 100 - The Video Terminal Emulator Emulator
-' What a great name for a program.
+Modem:          ' MODEM.COM - Program for dialing out to computers
+' The name couldn't be more vanilla if it tried.
 
 ' Improvements to include:
 ' ISP Beta Program - Faster network transmission and display times
@@ -259,8 +279,62 @@ VTEE100:
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-HACCBBS:
-' The Hacker and Computing Connoisseur Bulletin Board System.
+PubNews:        ' The Public News Server
+' Run by some hippie with Birkenstocks or something.
+
+' Articles:
+
+' Radioactive Soviet Spy Satellite Crashes to Earth
+' WASHINGTON, January 23rd
+' The Defense Department reported a radioactive section of a Soviet nuclear-
+' powered surveillance satellite fell out of orbit at 5:21pm and disintegrated
+' over the Indian Ocean. The four-ton chunk was from Cosmos 1402, which split
+' apart last year. While the highly radioactive chunk appears to have completely 
+' disintegrated upon re-entry, it would have safely landed in the Indian Ocean.
+
+' Confrontations in Lebanon Worrying Pentagon Officials
+' BEIRUT, January 23rd
+' According to sources from the Pentagon, a Marine Corps rifleman was ordered not
+' to fire at an Isreli soldier in his sights yesterday. This event is the closest
+' call yet in a series of military confrontations in Lebanon. Concerns over self-
+' defense and rules of engagement by US soldiers are fueling the recent incidents.
+' The Isreli military command has denied any confrontation, physical or verbal.
+
+' OPEC to Lower Output Levels Due to Dropping Oil Prices
+' GENEVA, January 23rd
+' The Organization of Petroleum Exporting Countries reached an agreement on a
+' plan to reduce their joint output in response to and to fight the dropping
+' price of oil. During the emergency session, the OPEC oil ministers have agreed
+' to reduce the joint output ceiling of 18.5 million barrels daily by at least
+' one million barrels. The current price of oil is $34 per barrel.
+
+' NASA Set To Launch Infrared Satellite on Wednesday
+' WASHINGTON, January 23rd
+' NASA has reported that it is on-track for launching the Infrared Astronomical
+' Satellite (IRAS) on Wednesday. The satellite will be launched from Vandenberg
+' Air Force Base by a Delta 3910 rocket for performing a survey of the night sky
+' at infrared wavelengths. NASA also confirmed rumors of issues with the rocket
+' and satellite, but reassured that they are on-schedule for the 25th launch.
+
+' Dolphins Beat Jets 14-0, Will Play Redskins in Super Bowl
+' MIAMI, January 23rd
+' The Miami Dolphins shut out the New York Jets 14-0, taking the AFC Championship
+' and advancing to the Super Bowl, where they will face the Washington Redskins
+' at Super Bowl XVII. The Dolphins defeated their NY rival with strong offensive
+' play and 2 touchdowns in the second half. They will compete against Washington
+' in a Super Bowl VII rematch, where Miami claimed a 14-7 victory a decade ago.
+
+' Popular NYC Hacker BBS Comes Back Online After Four-Month Haitus
+' NEW YORK, January 23rd
+' A popular BBS from New York City known as HACCBBS is back online after a four-
+' month hiatus where the status of the BBS was unknown. The sysop known by the
+' alias G4ndalf brought the system back online yesterday, citing concerns of FBI
+' surveillance for going dark until security measures could be taken. The BBS is
+' once again available, complete with enhanced security, at 212-638-4805.
+
+'-=-=-=-=-=-=-=-=-=-=-=-'
+
+HACCBBS:        ' The Hacker and Computing Connoisseur Bulletin Board System.
 ' I know how to name shit.
 
 ' News - Recent news (find link to NASA Public Gateway)
@@ -269,26 +343,22 @@ HACCBBS:
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-BellFone:
-' BellFone Customer Services Portal
+BellFone:       ' BellFone Customer Services Portal
 ' For customers of the BellFone Telephone Services Corporation
 ' Which you're not, so go 'way. Shoo.
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-Gateway:
-' The NASA Public Gateway
+Gateway:        ' The NASA Public Gateway
 ' Your tax dollars paid for this.
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-CPN:
-' NASA's Classified Private Network (CPN)
+CPN:            ' NASA's Classified Private Network (CPN)
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-XPLOD:
-' The X-Series Probe Launcer and Orbiting Director, Version 3.
+XPLOD:          ' The X-Series Probe Launcer and Orbiting Director, Version 3.
 ' IBM calls it the X-PLOD-3. That's totally not telling.
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
@@ -299,7 +369,7 @@ XPLOD:
 ' Example:  DATA LIME, BLACK, TRUE, "line of text"
 Textlines:
 DATA 97
-DATA  2, 0, 1,  "63K CP/M"
+DATA  2, 0, 1,  "20K CP/M"
 DATA  2, 0, 1,  "Version 2.2mits (07/28/80)"
 DATA  2, 0, 1,  "Copyright 1980 by Burcon Inc."
 DATA 10, 0, 1,  "line of text"
@@ -397,6 +467,28 @@ DATA  6, 0, 0,  " dMMMMMMM@^`       "
 DATA  9, 0, 1,  "`^^^^"
 DATA  6, 0, 1,  "MMMUP^"
 DATA  6, 0, 1,  " ^^"
+DATA 
+
+'D>SURVEY
+'                *** System Survey (June 82) ***
+'
+'Drive A: 28K bytes in 3 files with 8148K bytes remaining
+'Drive C: 32K bytes in 9 files with 8160K bytes remaining
+'Drive D: 32K bytes in 12 files with 8160K bytes remaining
+'
+'Memory map:
+'0       8       16      24      32      40      48      56      64
+'|       |       |       |       |       |       |       |       |
+' TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTCCCBBBBBBB
+'T=TPA   C=CPM   B=BIOS or unassigned    R=ROM or bad
+'BIOS at E603    iobyte 01       drive 03        BDOS at D806
+'
+'65535 Bytes RAM         0 Bytes ROM             55302 Bytes in TPA
+'0 Bytes Empty           65535 Total Active Bytes
+'
+'Active I/O ports:
+'10 11 12 13 14 15 16 17 
+
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -425,6 +517,25 @@ GameFiles:  ' Data files inside the game
 DATA 2      ' Number of outputs
 DATA "EXAMPLE.COM", 20, 1, 1
 DATA "GARBAGE.GRB", 18, -1, 1
+
+'-=-=-=-=-=-=-=-=-=-=-=-'
+
+Servers:
+
+'-=-=-=-=-=-=-=-=-=-=-=-'
+
+Computers:  ' Different model computers inside the game
+
+' Computers to include:
+
+' Apple II
+' TRS-80
+' Atari 800
+' Commodore VIC-20
+' Commodore 64
+' ZX Spectrum
+' TI-99/4
+' IBM PC Compatible
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -488,7 +599,7 @@ END SUB
 
 SUB Disksound (ticks%)
 ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
-    PLAY "T255MLMFO1L" + STR$(INT(tickrate% / ticks%)) + "A-"
+    PLAY "T255MLMFO1L" + STR$(INT(tickrate% / ticks%)) + "A"
 END SUB
 
 SUB Linedelay
@@ -497,12 +608,12 @@ SUB Linedelay
     NEXT k
 END SUB
 
-SUB Lineout (startline%, endline%)
+SUB Lineout (startline%, numlines%)
 ' Perform a lineout of the requested text lines
     sounds$ = "T255MSMFO4L64A-"
     IF slowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
-    FOR i = startline% TO endline%
+    FOR i = startline% TO startline% + numlines% - 1
         IF colorterm = TRUE THEN COLOR linedata(i).fgcolor, linedata(i).bgcolor
         IF remote THEN
             FOR j = 1 TO LEN(lines(i))

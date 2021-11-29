@@ -7,13 +7,13 @@
 
 ' Subroutine declarations
 DECLARE SUB Delay (ticks%)                      ' Delay by a set number of ticks
-DECLARE SUB Setdisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 DECLARE SUB Disk (seconds%)                     ' Simulate disk access sounds for number of seconds
 DECLARE SUB Diskpause (ticks%)                  ' Play a sound pause for a number of ticks (from 2^0 to 2^4)
 DECLARE SUB Disksound (ticks%)                  ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
-DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
 DECLARE SUB Linedelay ()                        ' Delay the local terminal for a linefeed
+DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
 DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
+DECLARE SUB Setdisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 
 ' Game constants
 CONST tickspeed% = 6            ' The configured tickspeed for screen output
@@ -86,8 +86,12 @@ END TYPE
 TYPE GameFile                   ' A file inside the simulator
     filename AS STRING * 12     ' The name of the file (e.g. VTEE.COM)
     size AS INTEGER             ' The size of the file in kb
-    server AS INTEGER           ' The target server for this file (0 for an executable)
+    server AS INTEGER           ' The target server for this file (0 for executables, -1 for none)
     event AS INTEGER            ' The triggered event if uploaded to the target server
+END TYPE
+
+TYPE GameServer                 ' A file server inside the simulator
+    servername AS STRING * 20   ' Name of the server
 END TYPE
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
@@ -400,7 +404,7 @@ Events:
 ' A single formatted response from a server.
 ' Format: points%, oneshot%
 DATA 1      ' Number of outputs
-DATA "event", 1, 2, 3, "value"
+DATA "useless file", 0, 2, 3, "value"
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -418,7 +422,9 @@ DATA 0      ' Number of game screens
 
 GameFiles:  ' Data files inside the game
 ' Format: filename$, size%, server%, event%
-DATA 0      ' Number of outputs
+DATA 2      ' Number of outputs
+DATA "EXAMPLE.COM", 20, 1, 1
+DATA "GARBAGE.GRB", 18, -1, 1
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -485,6 +491,12 @@ SUB Disksound (ticks%)
     PLAY "T255MLMFO1L" + STR$(INT(tickrate% / ticks%)) + "A-"
 END SUB
 
+SUB Linedelay
+' Delay the local terminal for a linefeed
+    FOR k = 1 TO tickspeed% * 25
+    NEXT k
+END SUB
+
 SUB Lineout (startline%, endline%)
 ' Perform a lineout of the requested text lines
     sounds$ = "T255MSMFO4L64A-"
@@ -507,12 +519,6 @@ SUB Lineout (startline%, endline%)
         END IF
         IF linedata(i).linefeed THEN PRINT
     NEXT i
-END SUB
-
-SUB Linedelay ()
-' Delay the local terminal for a linefeed
-    FOR k = 1 TO tickspeed% * 25
-    NEXT k
 END SUB
 
 SUB Pause (ticks%)

@@ -289,8 +289,8 @@ PubNews:        ' The Public News Server
 ' The US Defense Department reported a radioactive section of a Soviet nuclear-
 ' powered surveillance satellite fell out of orbit at 5:21pm and disintegrated
 ' over the Indian Ocean. The four-ton chunk was from Cosmos 1402, which split
-' apart last year. While the highly radioactive chunk appears to have completely 
-' disintegrated upon re-entry, it would have safely fallen into the Indian Ocean.
+' apart last year during an orbital maneuver. The highly radioactive chunk has
+' appeared to completely disintegrate over a remote section of the Indian Ocean.
 
 ' Confrontations in Lebanon Worrying Pentagon Officials
 ' BEIRUT, January 23rd

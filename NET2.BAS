@@ -290,7 +290,7 @@ PubNews:        ' The Public News Server
 ' powered surveillance satellite fell out of orbit at 5:21pm and disintegrated
 ' over the Indian Ocean. The four-ton chunk was from Cosmos 1402, which split
 ' apart last year. While the highly radioactive chunk appears to have completely 
-' disintegrated upon re-entry, it would have safely fallen in the Indian Ocean.
+' disintegrated upon re-entry, it would have safely fallen into the Indian Ocean.
 
 ' Confrontations in Lebanon Worrying Pentagon Officials
 ' BEIRUT, January 23rd

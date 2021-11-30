@@ -286,7 +286,7 @@ PubNews:        ' The Public News Server
 
 ' Radioactive Soviet Spy Satellite Crashes to Earth
 ' WASHINGTON, January 23rd
-' The Defense Department reported a radioactive section of a Soviet nuclear-
+' The US Defense Department reported a radioactive section of a Soviet nuclear-
 ' powered surveillance satellite fell out of orbit at 5:21pm and disintegrated
 ' over the Indian Ocean. The four-ton chunk was from Cosmos 1402, which split
 ' apart last year. While the highly radioactive chunk appears to have completely 
@@ -303,10 +303,10 @@ PubNews:        ' The Public News Server
 ' OPEC to Lower Output Levels Due to Dropping Oil Prices
 ' GENEVA, January 23rd
 ' The Organization of Petroleum Exporting Countries reached an agreement on a
-' plan to reduce their joint output in response to and to fight the dropping
-' price of oil. During the emergency session, the OPEC oil ministers have agreed
-' to reduce the joint output ceiling of 18.5 million barrels daily by at least
-' one million barrels. The current price of oil is $34 per barrel.
+' plan to reduce their joint output in response to recent dropping oil prices.
+' During the emergency session, the OPEC oil ministers have agreed to reduce the
+' joint output ceiling of 18.5 million barrels per day by at least 1 million.
+' The price per barrel, currently set at $34, is expected to rise as result.
 
 ' NASA Set To Launch Infrared Satellite on Wednesday
 ' WASHINGTON, January 23rd
@@ -330,7 +330,7 @@ PubNews:        ' The Public News Server
 ' month hiatus where the status of the BBS was unknown. The sysop known by the
 ' alias G4ndalf brought the system back online yesterday, citing concerns of FBI
 ' surveillance for going dark until security measures could be taken. The BBS is
-' once again available, complete with enhanced security, at 212-638-4805.
+' available again at 212-638-4805 and is accepting old and new users.
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 

@@ -56,24 +56,23 @@ Press any key to continue
 KIDDO.COM
 Hey, kiddo.
 
-If you're getting this message, that means you figured out how to use this
-thing after all. I know you were probably cursing my name and wishing you had a
-Commodore this entire time, but trust me, this is the way to go. Besides, not
-everyone deserves one, in my opinion. Think about how many of your friends got
-a 'puter for Christmas just so they could play video games? You and I both know
-that they don't and never will understand the power of a computer.
+Congrats on getting this thing running after all. I'm sure you were cursing my
+name and wishing you had a Commodore the whole time, but trust me on this one.
+Most people can't appreciate what a machine like this can do. Think about how
+many of your friends asked for a 'puter for Christmas just so they could play
+video games?
 
-This machine doesn't have a graphics chip, but it can do everything else that
-matters, including getting on-line. While it's my old machine and old floppy
-bay, I gave you a new 2400bps modem, 64K of RAM, a fresh copy of CP/M, and a
-color terminal. Trust me, even with its quirks, you'll appreciate the machine
-in time, because I know in your hands, this machine is true potential.
+Despite the startup procedure and the lack of a graphics chip, this Altair can
+do everything else that matters, including getting on-line. My old floppy bay
+supports 980K disks, so you won't be hurting for storage space. You have a new
+2400bps modem, 64K of RAM, a fresh copy of CP/M, and a color terminal. Trust
+me, even with its quirks, you'll appreciate the machine in time, once you learn
+its potential.
 
-Why did I pick you for this honor, I hear you grumbling? Well, I'm not dumb.
-Your Mom told me how you got your own phone line by promising never to make a
-long-distance call and how relieved she is that you've kept your word. How many
-calls have we had since you got your phone? Once I heard that, I took a look at
-your phone records, and sure enough, you've been fooling ol' Ma Bell from the
+Why pick you for this honor, I hear you ask? Your mom happened to tell me how
+you got your own phone line by promising never to call long-distance and how
+relieved she is that you've kept your word. Considering the calls we had, I had
+to see for myself, and sure enough, you've been fooling ol' Ma Bell from the
 start. Once I learned that you've been phreaking, I knew I had to pay attention
 to you and had to see what you could do with that phone connected to a modem.
 
@@ -88,7 +87,7 @@ Since you beat my first challenge of getting the thing running, here's my next
 one for you: if this machine has 64K of RAM, why is it only recognizing 20K?
 I could give you the answer, but how will you learn if I do? Let's see if you
 can figure it out on your own. If you can't, I _am_ still your uncle and here
-to help you out. If you ever need a hand, just use the 'HINT' program I wrote
+to help you out. If you ever need a hand, just use the HINT program I wrote
 which will dial up my machine where I can give you some tips.
 
 Now the ball is in your court. You have the tools, get the talent. Good luck!

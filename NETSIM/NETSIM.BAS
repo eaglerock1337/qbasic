@@ -35,7 +35,7 @@ DECLARE SUB Setdisk (newdisk$)                  ' Set the CP/M disk drive to spe
 ' Game constants
 CONST tickspeed% = 6            ' The configured tickspeed for screen output
 CONST tickrate% = 32            ' The number of ticks per second for disk access time
-CONST disksize% = 980           ' The size of the B: disk in kb
+CONST disksize% = 245           ' The size of the B: disk in 4kb blocks
 
 ' Boolean constants
 CONST TRUE = 1
@@ -103,7 +103,7 @@ END TYPE
 
 TYPE GameFile                   ' A file inside the simulator
     filename AS STRING * 12     ' The name of the file (e.g. VTEE.COM)
-    size AS INTEGER             ' The size of the file in kb
+    blocks AS INTEGER           ' The number of 4kb blocks the file uses
     server AS INTEGER           ' The target server for this file (0 for executables, -1 for none)
     event AS INTEGER            ' The triggered event if uploaded to the target server
 END TYPE
@@ -123,6 +123,17 @@ END TYPE
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
 ' Read game data
+OPEN "DEMO.DAT" FOR INPUT AS #1
+DIM SHARED totaldemolines AS INTEGER
+INPUT #1, Demolines
+DIM SHARED demolines(1 TO totaldemolines) AS STRING
+DIM SHARED demolinedata(1 TO totaldemolines) AS STRING
+FOR i = 1 TO totaldemolines
+    INPUT #1, demolinedata(i).fgcolor, demolinedata(i).bgcolor,  demolinedata(i).linefeed, demolines(i)
+NEXT i
+CLOSE #1
+
+
 RESTORE Textlines
 DIM SHARED Totallines AS INTEGER
 READ Totallines
@@ -180,11 +191,13 @@ Intro:          ' Game Introduction
 ' Connect to News Server for first time
 ' Conect to HACCBBS for the first time
 ' Download Modem Test Utility and use to determine you have 300bps
-' Help your first person on USENET
+' Help your first person on USENET (MOVCPM)
 ' Contact from G4ndalf - get the cracked MODEM application
 ' - allows selection of 2400BPS but doesn't work until QAM works
+' - enables public filesystem access for your account
 ' Help two more USENET users
 ' Unlock QAM and 2400BPS from AT&T
+' 
 
 
 
@@ -221,7 +234,7 @@ SELECT CASE cmd$
             Delay (4)
         ELSE
             Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
-            readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14) + 1
+            readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
             PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
             PRINT STR$(cpmspace%) + "k"; : PRINT : PRINT
         END IF
@@ -255,7 +268,7 @@ SELECT CASE cmd$
 
     ' Debug commands for STAT command
     CASE "FULLDISK"
-        cpmspace% = 16
+        cpmspace% = 4
 
     CASE "HALFDISK"
         cpmspace% = INT(disksize% / 2)
@@ -668,6 +681,9 @@ SUB Pause (ticks%)
     FOR k = 1 TO iter%
     NEXT k
 END SUB
+
+SUB Printdemo (startline%, numlines%)
+' Perform a lineout of the requested demo lines
 
 SUB Setdisk (newdisk$)
 ' Set the CP/M disk drive to specified disk

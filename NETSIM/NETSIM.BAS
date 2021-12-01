@@ -1,7 +1,24 @@
-'The Internet Simulator v2.0 by Peter Marks
-'This Net program will give a good heaping helping of fun!
-'Original incomplete version - July 1, 1998
-'Version 2.0 - November 21st, 2021
+'The Internet Simulator by Peter Marks
+'A text-based adventure game based on the early 80's Internet.
+'The idea is from old code I wrote when I was 15 and I recently rediscovered.
+
+'Yes, clearly it's inspired by WarGames. Duh.
+
+'I can only assume I recently saw the film since I have no recollection of
+'writing it whatsoever. However, I've written the successor game to be as
+'accurate as possible in terms of feel and authenticity, taking creative
+'license only when necessary.
+
+'While the modem software, servers, game events are fictional (and let's just
+'ignore my lazy and wrong use of QAM as a way of "unlocking" faster modem
+'speeds), everything else, including the computers, CP/M and its utilities, the
+'news events of the day (everything up to the "rumors" and fictional servers), how
+'the early 80's Internet worked, BBSes, USENET, as well as the look, sound, and
+'speed of terminals are as faithful to the real thing as I can manage.
+
+'Original attempt: July 1, 1998
+'New attempt: November 21st, 2021
+'Version 1.0 completed:
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -49,7 +66,7 @@ DIM SHARED cpmdisk$             ' Current CP/M Disk Drive
 DIM SHARED cpmfiles$(12)        ' The list of files on the B: drive
 DIM SHARED cpmfilenum%          ' Number of files on B: drive
 DIM SHARED cpmspace%            ' Available B: drive space in KB
-DIM SHARED ramsize%             ' 
+DIM SHARED ramsize%             '
 DIM SHARED slowbaud             ' If the terminal runs at 300 baud
 DIM SHARED remote               ' If the terminal is outputting remote data
 DIM SHARED colorterm            ' If terminal color is enabled
@@ -119,6 +136,17 @@ FOR l = 1 TO Totallines
     READ lines(l)
 NEXT l
 
+' TODO: Each type of data (screens, usenet posts, events, etc.)
+'       as DAT files with text and lineout data as TXT files
+'       Functions for loading each type of data
+'       Variables for text and metadata
+' E.G.: USENET.DAT holds the usenet post metadata
+'       USENET.TXT holds the text and lineout data
+'       LoadUsenet() loads the usenet metadata
+'       LoadLines("USENET.TXT") loads the lineout data
+'       usenet(totusenet%) holds the usenet metadata
+'       usenetlines$(totusenetlines%) holds the lineout data
+
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
 Initialize:     ' Initializes all variables for a new game.
@@ -142,7 +170,54 @@ Menu:           ' Main game menu
 
 Intro:          ' Game Introduction
 
-' 
+' View Introduction
+'
+' December 25th, 1982
+'
+' You wake up on Christmas morning, excited to open your presents. You asked for
+' a Commodore 64, but were disappointed to find nothing but clothes and some
+' Atari games. However, after all the presents were opened, your parents bring
+' out a hidden present from your Uncle Joe, the family computer expert. You rip
+' the package open to find an Altair 8800 inside. "It's not a new one," says Dad,
+' "it was your uncle's first computer, but he says he upgraded it for you and
+' gave you everything you need to get it up and running and to hook it up to your
+' phone line. You'll have to learn how to work all the switches and stuff, but he
+' said it will work with a monitor that he gave you as well!
+
+' January 24th, 1983
+'
+' It's been 30 days since you had the Altair. You tried to get the machine set up
+' in your room for several days after Christmas, but couldn't figure out how the
+' floppy disk worked. After several attempts and reattempts, you finally figured
+' out how to enter the bootstrap loader using the front-panel switches to load
+' CP/M from floppy disk and see the A> prompt on your terminal screen.
+
+' Having read the CP/M manual throughout the process, you were familiar with the
+' DIR command, which would display contents of the disk. You couldn't help but
+' notice the 'KIDDO.COM' file on the disk, as this is your uncle's nickname for
+' you. You immediately run the KIDDO file to see what happens.
+
+' KIDDO.COM
+' Hey, kiddo!
+'
+' If you're getting this message, that means you figured out how to use the
+' computer. I know you were looking forward to a Commodore, but I think you'll
+' find this machine just as capable and can use it to get on the Internet with
+' the modem I gave you. You'll probably notice that CP/M only says you have 20K
+' of RAM, so you'll have to figure out how to fix that. Once you do, you should
+' be able to run the modem application and start getting on-line.
+
+' I know you can figure this stuff out, because we've talked quite a lot over
+' the past year, and you never seem to have a long distance phone bill. So, if
+' you can fool ol' Ma Bell, I think you'll do just fine with the Altair. However,
+' if you ever need a hand, just use the 'HINT' program to reach out to me and I
+' can give you some tips.
+
+' Now the ball is in your court. Good luck!
+
+' Missions
+'
+' Resize CP/M - Grants access to certain programs (MODEM.COM, SCORE)
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -150,7 +225,7 @@ CPM:            ' Literally emulate CP/M enough to make it convincing.
 
 ' Boot Routine
 CLS
-COLOR GREEN, BLACK
+COLOR defaultcolor, BLACK
 Disk (4)
 CALL Lineout(1, 3)
 Delay (4)
@@ -159,7 +234,7 @@ Disk (2)
 Delay (4)
 
 Prompt:         ' CP/M Disk Prompt
-COLOR GREEN, BLACK
+COLOR defaultcolor, BLACK
 PRINT cpmdisk$;
 LINE INPUT ">", cmd$
 SELECT CASE cmd$
@@ -184,13 +259,22 @@ SELECT CASE cmd$
     CASE "MOVCPM"       ' Create 63K CP/M Image
         PRINT "MOVCPM isn't written yet."
 
-    CASE "SYSGEN"       ' System
+    CASE "SYSGEN"       ' Apply CP/M to disk
+        PRINT "SYSGEN isn't written yet."
 
     CASE "SCORE"        ' Get a score of how you're doing
         PRINT "SCORE isn't written yet."
 
     CASE "QUIT"         ' Quit the game
-        END
+        END 
+
+    ' Command for debugging file operations
+    CASE "WRITEDATA"
+        OPEN "NETSIM.DAT" FOR OUTPUT AS #1
+        FOR i = 1 TO Totallines
+            WRITE #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
+        NEXT i
+        CLOSE #1
 
     ' Debug commands for STAT command
     CASE "FULLDISK"
@@ -205,9 +289,16 @@ SELECT CASE cmd$
     CASE "RANDDISK"
         cpmspace% = INT(RND * disksize% + 1)
 
+    ' Debug commands for terminal color
+    CASE "GREEN"
+        defaultcolor = GREEN
+
+    CASE "AMBER"
+        defaultcolor = OLIVE
+
     ' Debug commands for Lineout subroutine
     CASE "SATURN"
-        CALL Lineout(65, Totallines)
+        CALL Lineout(65, 34)
 
     CASE "TEST"
         CALL Lineout(1, Totallines)
@@ -282,70 +373,31 @@ Modem:          ' MODEM.COM - Program for dialing out to computers
 PubNews:        ' The Public News Server
 ' Run by some hippie with Birkenstocks or something.
 
-' Articles:
-
-' Radioactive Soviet Spy Satellite Crashes to Earth
-' WASHINGTON, January 23rd
-' The US Defense Department reported a radioactive section of a Soviet nuclear-
-' powered surveillance satellite fell out of orbit at 5:21pm and disintegrated
-' over the Indian Ocean. The four-ton chunk was from Cosmos 1402, which broke
-' apart last year during an orbital maneuver. The highly radioactive chunk has
-' appeared to completely disintegrate over a remote section of the Indian Ocean.
-
-' Confrontations in Lebanon Worrying Pentagon Officials
-' BEIRUT, January 23rd
-' According to sources from the Pentagon, a Marine Corps rifleman was ordered not
-' to fire at an Isreli soldier in his sights yesterday. This event is the closest
-' call yet in a series of military confrontations in Lebanon. Concerns over self-
-' defense and rules of engagement by US soldiers are fueling the recent incidents.
-' The Isreli military command has denied any confrontation, physical or verbal.
-
-' OPEC to Lower Output Levels Due to Dropping Oil Prices
-' GENEVA, January 23rd
-' The Organization of Petroleum Exporting Countries reached an agreement on a
-' plan to reduce their joint output in response to recent dropping oil prices.
-' During the emergency session, the OPEC oil ministers have agreed to reduce the
-' joint output ceiling of 18.5 million barrels per day by at least 1 million.
-' The price per barrel, currently set at $34, is expected to rise as result.
-
-' NASA Set To Launch Infrared Satellite on Wednesday
-' WASHINGTON, January 23rd
-' NASA has reported that it is on-track for launching the Infrared Astronomical
-' Satellite (IRAS) on Wednesday. The satellite will be launched from Vandenberg
-' Air Force Base by a Delta 3910 rocket for performing a survey of the night sky
-' at infrared wavelengths. NASA also confirmed rumors of issues with the rocket
-' and satellite, but reassured that they are on-schedule for the 25th launch.
-
-' Dolphins Beat Jets 14-0, Will Play Redskins in Super Bowl
-' MIAMI, January 23rd
-' The Miami Dolphins shut out the New York Jets 14-0, taking the AFC Championship
-' and advancing to the Super Bowl, where they will face the Washington Redskins
-' at Super Bowl XVII. The Dolphins defeated their NY rival with strong offensive
-' play and 2 touchdowns in the second half. They will compete against Washington
-' in a Super Bowl VII rematch, where Miami claimed a 14-7 victory a decade ago.
-
-' Popular NYC Hacker BBS Comes Back Online After Four-Month Haitus
-' NEW YORK, January 23rd
-' A popular BBS from New York City known as HACCBBS is back online after a four-
-' month hiatus where the status of the BBS was unknown. The sysop known by the
-' alias G4ndalf brought the system back online yesterday, citing concerns of FBI
-' surveillance for going dark until security measures could be taken. The BBS is
-' available again at 212-638-4805 and is accepting old and new users.
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
 HACCBBS:        ' The Hacker and Computing Connoisseur Bulletin Board System.
 ' I know how to name shit.
 
-' News - Recent news (find link to NASA Public Gateway)
-' Topics - Movies, Space, CPM, MSDOS, V-TEE
+' Digital News - Recent news (find link to NASA Public Gateway)
+' Pages - BBS pages
+' Best of USENET - best-of threads curated by the SYSOP
 ' Files - .GRB file formats (garbage), .DAT (used for tasks), .COM (executables)
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-BellFone:       ' BellFone Customer Services Portal
-' For customers of the BellFone Telephone Services Corporation
-' Which you're not, so go 'way. Shoo.
+BellNet:        ' AT&T's Customer Service Portal
+' Not real, but I can picture some of those Bell Labs guys doing something like this.
+
+' Payment History
+' Monthly Usage
+' Local calls: 8,137 minutes
+' Long-Distance calls: 0 minutes
+' Shows the user has his own phone line with 8,137 monthly minutes but no long-distance charges
+' Contact Us:
+' About the Portal (a thing from Bell labs)
+' Bell Laboratories (a thing about Bell labs)
+' Trial Programs: QAM trial (enable 2400baud)
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -467,7 +519,7 @@ DATA  6, 0, 0,  " dMMMMMMM@^`       "
 DATA  9, 0, 1,  "`^^^^"
 DATA  6, 0, 1,  "MMMUP^"
 DATA  6, 0, 1,  " ^^"
-DATA 
+DATA
 
 'D>SURVEY
 '                *** System Survey (June 82) ***
@@ -487,7 +539,7 @@ DATA
 '0 Bytes Empty           65535 Total Active Bytes
 '
 'Active I/O ports:
-'10 11 12 13 14 15 16 17 
+'10 11 12 13 14 15 16 17
 
 
 '-=-=-=-=-=-=-=-=-=-=-=-'

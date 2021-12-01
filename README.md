@@ -19,8 +19,8 @@ Here's a list of the different QBasic programs, their timestamps, and where they
 | GORILLA2.BAS<br>NIBBLES2.BAS<br>SONG.BAS | Me playing with QBasic game code | Floppy from my teens | 11/23/1996<br>4/5/1997<br>9/11/1996
 | MARIO.BAS | MarioMeter 2.0 | Floppy from my teens | 8/27/1997
 | MARIO_UF.BAS | MarioMeter 2.0 w/comments | Floppy from my teens| 5/31/1997
-| NET.BAS | Internet Simulator | Floppy from my teens | 7/1/1998
-| NET2.BAS | Internet Simulator 2.0 | Recent work | 11/22/2021
+| NET.BAS | Internet Simulator (original attempt) | Floppy from my teens | 7/1/1998
+| NETSIM/NETSIM.BAS | Internet Simulator | New attempt of my original game idea | 11/22/2021-current
 
 ## sources
 
@@ -37,5 +37,3 @@ The copy of QBasic I had also included two games: QBasic Gorillas and QBasic Nib
 A book published years ago that I borrowed and made a copy of from the local library. You can view details about this book, read it, and download the listings here:
 
 [http://vintage-basic.net/games.html](http://vintage-basic.net/games.html)
-
-### 

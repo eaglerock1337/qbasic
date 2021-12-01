@@ -172,52 +172,29 @@ Intro:          ' Game Introduction
 
 ' View Introduction
 '
-' December 25th, 1982
-'
-' You wake up on Christmas morning, excited to open your presents. You asked for
-' a Commodore 64, but were disappointed to find nothing but clothes and some
-' Atari games. However, after all the presents were opened, your parents bring
-' out a hidden present from your Uncle Joe, the family computer expert. You rip
-' the package open to find an Altair 8800 inside. "It's not a new one," says Dad,
-' "it was your uncle's first computer, but he says he upgraded it for you and
-' gave you everything you need to get it up and running and to hook it up to your
-' phone line. You'll have to learn how to work all the switches and stuff, but he
-' said it will work with a monitor that he gave you as well!
-
-' January 24th, 1983
-'
-' It's been 30 days since you had the Altair. You tried to get the machine set up
-' in your room for several days after Christmas, but couldn't figure out how the
-' floppy disk worked. After several attempts and reattempts, you finally figured
-' out how to enter the bootstrap loader using the front-panel switches to load
-' CP/M from floppy disk and see the A> prompt on your terminal screen.
-
-' Having read the CP/M manual throughout the process, you were familiar with the
-' DIR command, which would display contents of the disk. You couldn't help but
-' notice the 'KIDDO.COM' file on the disk, as this is your uncle's nickname for
-' you. You immediately run the KIDDO file to see what happens.
-
-' KIDDO.COM
-' Hey, kiddo!
-'
-' If you're getting this message, that means you figured out how to use the
-' computer. I know you were looking forward to a Commodore, but I think you'll
-' find this machine just as capable and can use it to get on the Internet with
-' the modem I gave you. You'll probably notice that CP/M only says you have 20K
-' of RAM, so you'll have to figure out how to fix that. Once you do, you should
-' be able to run the modem application and start getting on-line.
-
-' I know you can figure this stuff out, because we've talked quite a lot over
-' the past year, and you never seem to have a long distance phone bill. So, if
-' you can fool ol' Ma Bell, I think you'll do just fine with the Altair. However,
-' if you ever need a hand, just use the 'HINT' program to reach out to me and I
-' can give you some tips.
-
-' Now the ball is in your court. Good luck!
 
 ' Missions
 '
 ' Resize CP/M - Grants access to certain programs (MODEM.COM, SCORE)
+' Connect to BellNet and find the news server (link to HACCBBS offline)
+' Connect to News Server for first time
+' Conect to HACCBBS for the first time
+' Download Modem Test Utility and use to determine you have 300bps
+' Help your first person on USENET
+' Contact from G4ndalf - get the cracked MODEM application
+' - allows selection of 2400BPS but doesn't work until QAM works
+' Help two more USENET users
+' Unlock QAM and 2400BPS from AT&T
+
+
+
+'- Unlock color
+'- Unlock long-distance phreaking
+'- Unlock side missions?
+'- Unlock NASA Gateway
+'- Get password to NASA Gateway User
+'- Find better password on network somewhere
+'- 
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 

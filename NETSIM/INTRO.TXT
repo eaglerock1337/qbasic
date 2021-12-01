@@ -1,0 +1,96 @@
+December 25th, 1982, New York City
+
+You wake up on Christmas morning, excited to open your presents. You asked for
+a Commodore 64 this year, and are hoping to get it and some games to play, but
+were disappointed to find nothing but clothes and some Atari games. Afterwards,
+your parents surprise you return from the attic with some large gifts. "These
+are from your Uncle Joe," says Mom. You jump up to grab the presents and rip
+the first one open, but instead of the Commodore, you find an old Altair 8800.
+You stop and look at the cryptic box for a minute with dozens of red LEDs and
+switches on the front panel.
+
+"I know it's not the computer you wanted," says Dad, "but we did say after the
+Atari for your 16th that big presents would have to wait. This machine was your
+uncle's first computer, but he said you could have it and that he upgraded it
+for you, too." You open the other boxes to find a huge disk drive, a new modem,
+and a color terminal. You also find the hundreds of pages of manuals with a
+handwritten note on top:
+
+Hey Kiddo,
+
+I know you've been asking for a computer all year, and it's time you've had one
+of your own. This machine served me well for years, and it should do the same
+for you. Sorry I can't see you this year, but should be in New York soon. In
+the meantime, I hope to see you on-line soon!
+
+Love, Uncle Joe
+
+
+December 29th, 1982
+
+After 4 days of trying to figure out how to get the system up and running, you
+aren't much closer. You have everything hooked up, but can't get the disk drive
+to work. The manual talks about inputting a bootstrap loader to make the Altair
+smart enough to read from disk, but it involves a cryptic code and using the
+giant front panel and just makes no sense to you. As your friends are all
+playing their Commodore 64 games, you give up in frustration.
+
+
+January 24th, 1983, One Month Later
+
+It's been 30 days since you were given the Altair. After the New Year, you've
+tried getting it running a few more times. While you were a bit further along
+each time, you gave up when it all stopped making sense. Eventually, you think
+you finally have it down and make step-by-step notes for yourself. You enter
+the disk's bootstrap loader carefully, take a deep breath, and toggle the RUN
+switch, which makes the disk drive spring to life.
+
+You feel this incredible rush and wave of accomplishment as you hear the disk
+churning and reading the floppy disk as CP/M quickly loads and brings your
+terminal to life. Your research, toil, and effort is finally rewarded by the
+simple A> prompt and flashing cursor on your terminal screen.
+
+Press any key to continue
+
+
+KIDDO.COM
+Hey, kiddo.
+
+If you're getting this message, that means you figured out how to use this
+thing after all. I know you were probably cursing my name and wishing you had a
+Commodore this entire time, but trust me, this is the way to go. Besides, not
+everyone deserves one, in my opinion. Think about how many of your friends got
+a 'puter for Christmas just so they could play video games? You and I both know
+that they don't and never will understand the power of a computer.
+
+This machine doesn't have a graphics chip, but it can do everything else that
+matters, including getting on-line. While it's my old machine and old floppy
+bay, I gave you a new 2400bps modem, 64K of RAM, a fresh copy of CP/M, and a
+color terminal. Trust me, even with its quirks, you'll appreciate the machine
+in time, because I know in your hands, this machine is true potential.
+
+Why did I pick you for this honor, I hear you grumbling? Well, I'm not dumb.
+Your Mom told me how you got your own phone line by promising never to make a
+long-distance call and how relieved she is that you've kept your word. How many
+calls have we had since you got your phone? Once I heard that, I took a look at
+your phone records, and sure enough, you've been fooling ol' Ma Bell from the
+start. Once I learned that you've been phreaking, I knew I had to pay attention
+to you and had to see what you could do with that phone connected to a modem.
+
+...How did I get your phone records, I hear you ask? Let's just say phreaking
+isn't the only way to play with our favorite crumbling monopoly. I found a
+little on-line experiment of theirs and already figured out how to exploit it.
+So we can stop pretending that you're more than capable of figuring this stuff
+out on your own. But just like any other 16-year-old, you're lazy and require
+motivation, so that's where I come in.
+
+Since you beat my first challenge of getting the thing running, here's my next
+one for you: if this machine has 64K of RAM, why is it only recognizing 20K?
+I could give you the answer, but how will you learn if I do? Let's see if you
+can figure it out on your own. If you can't, I _am_ still your uncle and here
+to help you out. If you ever need a hand, just use the 'HINT' program I wrote
+which will dial up my machine where I can give you some tips.
+
+Now the ball is in your court. You have the tools, get the talent. Good luck!
+
+- Uncle Joe

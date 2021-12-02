@@ -123,13 +123,13 @@ END TYPE
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
 ' Read game data
-OPEN "DEMO.DAT" FOR INPUT AS #1
+OPEN "NETSIM\DEMO.DAT" FOR INPUT AS #1
 DIM SHARED totaldemolines AS INTEGER
-INPUT #1, Demolines
+INPUT #1, totaldemolines
 DIM SHARED demolines(1 TO totaldemolines) AS STRING
-DIM SHARED demolinedata(1 TO totaldemolines) AS STRING
+DIM SHARED demolinedata(1 TO totaldemolines) AS TextData
 FOR i = 1 TO totaldemolines
-    INPUT #1, demolinedata(i).fgcolor, demolinedata(i).bgcolor,  demolinedata(i).linefeed, demolines(i)
+    INPUT #1, demolinedata(i).fgcolor, demolinedata(i).bgcolor, demolinedata(i).linefeed, demolines(i)
 NEXT i
 CLOSE #1
 
@@ -197,7 +197,7 @@ Intro:          ' Game Introduction
 ' - enables public filesystem access for your account
 ' Help two more USENET users
 ' Unlock QAM and 2400BPS from AT&T
-' 
+'
 
 
 
@@ -207,7 +207,7 @@ Intro:          ' Game Introduction
 '- Unlock NASA Gateway
 '- Get password to NASA Gateway User
 '- Find better password on network somewhere
-'- 
+'-
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -256,7 +256,7 @@ SELECT CASE cmd$
         PRINT "SCORE isn't written yet."
 
     CASE "QUIT"         ' Quit the game
-        END 
+        END
 
     ' Command for debugging file operations
     CASE "WRITEDATA"
@@ -681,9 +681,6 @@ SUB Pause (ticks%)
     FOR k = 1 TO iter%
     NEXT k
 END SUB
-
-SUB Printdemo (startline%, numlines%)
-' Perform a lineout of the requested demo lines
 
 SUB Setdisk (newdisk$)
 ' Set the CP/M disk drive to specified disk

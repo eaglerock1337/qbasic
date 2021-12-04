@@ -12,7 +12,7 @@
 'While the modem software, servers, game events are fictional (and let's just
 'ignore my lazy and wrong use of QAM as a way of "unlocking" faster modem
 'speeds), everything else, including the computers, CP/M and its utilities, the
-'news events of the day (everything up to the "rumors" and fictional servers), how
+'news events of the day (everything up to my "rumors" and fictional servers), how
 'the early 80's Internet worked, BBSes, USENET, as well as the look, sound, and
 'speed of terminals are as faithful to the real thing as I can manage.
 
@@ -41,25 +41,18 @@ CONST disksize% = 245           ' The size of the B: disk in 4kb blocks
 CONST TRUE = 1
 CONST FALSE = 0
 
-' Dark colors (FG and BG)
-CONST BLACK = 0
-CONST NAVY = 1
-CONST GREEN = 2
-CONST TEAL = 3
-CONST MAROON = 4
-CONST PURPLE = 5
-CONST OLIVE = 6
-CONST SILVER = 7
+' Dark colors (FG and BG)       Light colors (FG only)
+CONST BLACK = 0:                CONST GRAY = 8
+CONST NAVY = 1:                 CONST BLUE = 9
+CONST GREEN = 2:                CONST LIME = 10
+CONST TEAL = 3:                 CONST CYAN = 11
+CONST MAROON = 4:               CONST RED = 12
+CONST PURPLE = 5:               CONST MAGENTA = 13
+CONST OLIVE = 6:                CONST YELLOW = 14
+CONST SILVER = 7:               CONST WHITE = 15
 
-' Light colors (FG only)
-CONST GRAY = 8
-CONST BLUE = 9
-CONST LIME = 10
-CONST CYAN = 11
-CONST RED = 12
-CONST MAGENTA = 13
-CONST YELLOW = 14
-CONST WHITE = 15
+' Text type contstants
+CONST DEMO = 1
 
 ' Global variables
 DIM SHARED cpmdisk$             ' Current CP/M Disk Drive

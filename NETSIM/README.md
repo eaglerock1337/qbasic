@@ -1,4 +1,4 @@
-# internet simulator
+# Internet simulator
 
 A text-based adventure game based on the early 80's Internet.
 

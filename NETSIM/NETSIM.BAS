@@ -115,30 +115,47 @@ END TYPE
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-' Read game data
+' Open files for reading game data
 OPEN "NETSIM\DEMO.DAT" FOR INPUT AS #1
-DIM SHARED totaldemolines AS INTEGER
-INPUT #1, totaldemolines
-DIM SHARED demolines(1 TO totaldemolines) AS STRING
-DIM SHARED demolinedata(1 TO totaldemolines) AS TextData
-FOR i = 1 TO totaldemolines
-    INPUT #1, demolinedata(i).fgcolor, demolinedata(i).bgcolor, demolinedata(i).linefeed, demolines(i)
+
+' Create data length and offset variables
+DIM SHARED demooffset AS INTEGER
+DIM SHARED demolines AS INTEGER
+DIM SHARED totallines AS INTEGER
+
+demooffset = 0
+INPUT #1, demolines
+totallines = demolines
+PRINT demolines
+PRINT totallines
+PRINT "wtf"
+WHILE A$ = ""
+    A$ = INKEY$
+WEND
+
+' Read demo file data
+DIM SHARED lines(1 TO totallines) AS STRING
+DIM SHARED linedata(1 TO totallines) AS TextData
+FOR i = 1 TO totallines
+    INPUT #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
 NEXT i
+
+' Close game data files
 CLOSE #1
 
 
-RESTORE Textlines
-DIM SHARED Totallines AS INTEGER
-READ Totallines
-
-DIM SHARED linedata(1 TO Totallines) AS TextData
-DIM SHARED lines(1 TO Totallines) AS STRING
-FOR l = 1 TO Totallines
-    READ linedata(l).fgcolor
-    READ linedata(l).bgcolor
-    READ linedata(l).linefeed
-    READ lines(l)
-NEXT l
+'RESTORE Textlines
+'DIM SHARED totallines AS INTEGER
+'READ totallines
+'
+'DIM SHARED linedata(1 TO totallines) AS TextData
+'DIM SHARED lines(1 TO totallines) AS STRING
+'FOR l = 1 TO totallines
+''    READ linedata(l).fgcolor
+''    READ linedata(l).bgcolor
+''    READ linedata(l).linefeed
+''    READ lines(l)
+'NEXT l
 
 ' TODO: Each type of data (screens, usenet posts, events, etc.)
 '       as DAT files with text and lineout data as TXT files
@@ -254,7 +271,7 @@ SELECT CASE cmd$
     ' Command for debugging file operations
     CASE "WRITEDATA"
         OPEN "NETSIM.DAT" FOR OUTPUT AS #1
-        FOR i = 1 TO Totallines
+        FOR i = 1 TO totallines
             WRITE #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
         NEXT i
         CLOSE #1
@@ -284,7 +301,7 @@ SELECT CASE cmd$
         CALL Lineout(65, 34)
 
     CASE "TEST"
-        CALL Lineout(1, Totallines)
+        CALL Lineout(1, totallines)
 
     ' Debug command for toggling terminal color
     CASE "COLOR"
@@ -398,111 +415,6 @@ XPLOD:          ' The X-Series Probe Launcer and Orbiting Director, Version 3.
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-' Individual lines of text data
-' Total number of text lines:
-' Format:   fgcolor%, bgcolor%, linefeed%, text$
-' Example:  DATA LIME, BLACK, TRUE, "line of text"
-Textlines:
-DATA 97
-DATA  2, 0, 1,  "20K CP/M"
-DATA  2, 0, 1,  "Version 2.2mits (07/28/80)"
-DATA  2, 0, 1,  "Copyright 1980 by Burcon Inc."
-DATA 10, 0, 1,  "line of text"
-DATA  2, 0, 1,  "other line of text"
-DATA  0, 0, 1,  " "
-DATA  0, 0, 1,  " "
-DATA  0, 0, 1,  " "
-DATA  0, 0, 1,  " "
-DATA  0, 0, 1,  " "
-DATA  0, 0, 1,  " "
-DATA  0, 0, 1,  " "
-DATA  0, 0, 1,  " "
-DATA 10, 0, 0,  "********************************************************************************"
-DATA 10, 0, 0,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           "
-DATA  4, 0, 0,  "TOP SECRET SECURITY"
-DATA 10, 0, 0,  " *"
-DATA 10, 0, 0,  "********************************************************************************"
-DATA 10, 0, 1,  "* 1) CHECK SATELLITE"
-DATA 10, 0, 1,  "* 2) CHECK SPACE SHUTTLE"
-DATA 10, 0, 1,  "* 3) CHECK BOOSTER ROCKETS"
-DATA 10, 0, 1,  "* 4) CHECK MAIN CONTROLS"
-DATA 10, 0, 1,  "* 5) CHECK FUEL T7ANK"
-DATA 10, 0, 1,  "* 6) ACTIVATE EBS SYSTEM"
-DATA 10, 0, 1,  "* 7) ACTIVATE HES SYSTEM"
-DATA 10, 0, 1,  "* 8) ACTIVATE LAUNCH PREPARATION..."
-DATA 10, 0, 1,  "* 9) RETURN TO GUEST LEVEL SECURITY"
-DATA 10, 0, 0,  "********************************************************************************"
-DATA 10, 0, 1,  " "
-DATA 10, 0, 1,  "          Enter number of choice here -----> "
-DATA  6, 0, 0,  "********************************************************************************"
-DATA  6, 0, 0,  "* WELCOME TO THE NASA LAUNCH PREPARATION SYSTEM!           GUEST LEVEL SECURITY*"
-DATA  6, 0, 0,  "********************************************************************************"
-DATA  6, 0, 0,  "* 1) GET INFO ON THE SPACE SHUTTLE LAUNCH   2) INPUT CODE FOR HIGHER ATHORITY  *"
-DATA  6, 0, 0,  "********************************************************************************"
-DATA 12, 7, 1,  " ,@@@@@@C      @@@@     ,@@@@@@.      1@@@@@@@@@@@@      0@@@@@:"
-DATA 12, 7, 1,  "i@@@@@@@@@     @@@@    i@@@@@@@@,   G@@@@@@@@@@@@@@     @@@@@@@@G"
-DATA 12, 7, 1,  "G@@@t t@@@L    @@@@    @@@@ .@@@@  :@@@8               8@@@1 @@@@"
-DATA 12, 7, 1,  "G@@@t  @@@@    @@@@   8@@@1  C@@@0 :@@@8              ;@@@@  ,@@@@"
-DATA 12, 7, 1,  "C@@@1  ;@@@G   @@@@  ;@@@8    @@@@, G@@@@@@@@@@@@@    @@@@    0@@@L"
-DATA 12, 7, 1,  "L@@@t   @@@@   @@@@  @@@@     .@@@@   f8@@@@@@@@@@@; 8@@@L     @@@@"
-DATA 12, 7, 1,  "C@@@f   :@@@0  @@@@ 0@@@L      0@@@L           .@@@8:@@@@      :@@@@"
-DATA 12, 7, 1,  "C@@@t    @@@@1:@@@@,@@@@        @@@@GGGGGGGCCC0@@@@L@@@@.       8@@@1"
-DATA 12, 7, 1,  "C@@@t     @@@@@@@@C@@@@,        :@@@@@@@@@@@@@@@@@1G@@@C         @@@@"
-DATA 14, 0, 1,  "   .           .        .                     .        .            ."
-DATA 14, 0, 1,  "             .               .    .          .              .   .         ."
-DATA 14, 0, 1,  "               _________________      ____         __________"
-DATA 14, 0, 1,  " .       .    /                 |    /    \    .  |          \ "
-DATA 14, 0, 1,  "     .       /    ______   _____| . /      \      |    ___    |     .     ."
-DATA 14, 0, 1,  "           .  \    \   |   |      /   /__\   \  . |         _/               ."
-DATA 14, 0, 1,  " .     ________>    |  |   | .   /            \   |   |\    \_______    ."
-DATA 14, 0, 1,  "      |            /   |   |    /    ______    \  |   | \           |"
-DATA 14, 0, 1,  "      |___________/    |___|   /____/      \____\ |___|  \__________|    ."
-DATA 14, 0, 1,  "  .     ____    __  . _____   ____      .  __________   .  _________"
-DATA 14, 0, 1,  "       \    \  /  \  /    /  /    \       |          \    /         |      ."
-DATA 14, 0, 1,  "        \    \/    \/    /  /      \      |    ___    |  /    ______|  ."
-DATA 14, 0, 1,  "         \              /  /   /\   \ .   |   |___>   |  \    \ "
-DATA 14, 0, 1,  "   .      \            /  /   /__\   \    |         _/.   \    \            ."
-DATA 14, 0, 1,  "           \    /\    /  /            \   |   |\    \______>    |   ."
-DATA 14, 0, 1,  "            \  /  \  /  /    ______    \  |   | \              /          ."
-DATA 14, 0, 1,  " .       .   \/    \/  /____/      \____\ |___|  \____________/"
-DATA 14, 0, 1,  "                               .                                        ."
-DATA 14, 0, 1,  "     .                           .         .               .                 ."
-DATA 14, 0, 1,  "                .                                   .            ."
-DATA  6, 0, 1,  "                                         _.oo."
-DATA  9, 0, 0,  "                 _.u[[/;:,.         "
-DATA  6, 0, 1,  ".odMMMMMM'"
-DATA  9, 0, 0,  "              .o888UU[[[/;:-.  "
-DATA  6, 0, 1,  ".o@P^    MMM^"
-DATA  9, 0, 0,  "             oN88888UU[[[/;::-.        "
-DATA  6, 0, 1,  "dP^"
-DATA  9, 0, 0,  "            dNMMNN888UU[[[/;:--.   "
-DATA  6, 0, 1,  ".o@P^"
-DATA  9, 0, 0,  "           ,MMMMMMN888UU[[/;::-. "
-DATA  6, 0, 1,  "o@^"
-DATA  9, 0, 0,  "           NNMMMNN888UU[[[/~."
-DATA  6, 0, 1,  "o@P^"
-DATA  9, 0, 0,  "           888888888UU[[[/"
-DATA  6, 0, 0,  "o@^"
-DATA  9, 0, 1,  "-.."
-DATA  6, 0, 0,  "          o"
-DATA  9, 0, 0,  "I8888UU[[[/"
-DATA  6, 0, 0,  "o@P^"
-DATA  9, 0, 1,  ":--.."
-DATA  6, 0, 0,  "       .@^  "
-DATA  9, 0, 0,  "YUU[[[/"
-DATA  6, 0, 0,  "o@^"
-DATA  9, 0, 1,  ";::---.."
-DATA  6, 0, 0,  "     oMP     "
-DATA  9, 0, 0,  "^/"
-DATA  6, 0, 0,  "o@P^"
-DATA  9, 0, 1,  ";:::---.."
-DATA  6, 0, 0,  "  .dMMM    .o@^ "
-DATA  9, 0, 1,  "^;::---..."
-DATA  6, 0, 0,  " dMMMMMMM@^`       "
-DATA  9, 0, 1,  "`^^^^"
-DATA  6, 0, 1,  "MMMUP^"
-DATA  6, 0, 1,  " ^^"
-DATA
 
 'D>SURVEY
 '                *** System Survey (June 82) ***

@@ -56,10 +56,10 @@ CONST DEMO = 1
 
 ' Global variables
 DIM SHARED cpmdisk$             ' Current CP/M Disk Drive
-DIM SHARED cpmfiles$(12)        ' The list of files on the B: drive
+DIM SHARED cpmfiles%(40)        ' The list of files on the B: drive
 DIM SHARED cpmfilenum%          ' Number of files on B: drive
 DIM SHARED cpmspace%            ' Available B: drive space in KB
-DIM SHARED ramsize%             '
+DIM SHARED ramsize%             ' The size of of the CP/M system
 DIM SHARED slowbaud             ' If the terminal runs at 300 baud
 DIM SHARED remote               ' If the terminal is outputting remote data
 DIM SHARED colorterm            ' If terminal color is enabled
@@ -95,7 +95,7 @@ TYPE GameScreen                 ' A complete game screen
 END TYPE
 
 TYPE GameFile                   ' A file inside the simulator
-    filename AS STRING * 12     ' The name of the file (e.g. VTEE.COM)
+    displayname AS STRING * 12  ' The display format of the file (e.g. 'MODEM     COM')
     blocks AS INTEGER           ' The number of 4kb blocks the file uses
     server AS INTEGER           ' The target server for this file (0 for executables, -1 for none)
     event AS INTEGER            ' The triggered event if uploaded to the target server
@@ -115,7 +115,9 @@ END TYPE
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
-' Open files for reading game data
+Loaddata:       ' Load all game data from .DAT and .TXT files
+
+' Open files for reading game text
 OPEN "NETSIM\DEMO.DAT" FOR INPUT AS #1
 
 ' Create data length and offset variables
@@ -126,36 +128,30 @@ DIM SHARED totallines AS INTEGER
 demooffset = 0
 INPUT #1, demolines
 totallines = demolines
-PRINT demolines
-PRINT totallines
-PRINT "wtf"
-WHILE A$ = ""
-    A$ = INKEY$
-WEND
 
-' Read demo file data
+' Read demo text data
 DIM SHARED lines(1 TO totallines) AS STRING
 DIM SHARED linedata(1 TO totallines) AS TextData
 FOR i = 1 TO totallines
     INPUT #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
 NEXT i
 
-' Close game data files
+' Close game text files
 CLOSE #1
 
+' Retrieve game file data
+OPEN "NETSIM\FILES.DAT" FOR INPUT AS #1
 
-'RESTORE Textlines
-'DIM SHARED totallines AS INTEGER
-'READ totallines
-'
-'DIM SHARED linedata(1 TO totallines) AS TextData
-'DIM SHARED lines(1 TO totallines) AS STRING
-'FOR l = 1 TO totallines
-''    READ linedata(l).fgcolor
-''    READ linedata(l).bgcolor
-''    READ linedata(l).linefeed
-''    READ lines(l)
-'NEXT l
+DIM SHARED totalfiles AS INTEGER
+INPUT #1, totalfiles
+DIM SHARED gamefilenames(1 TO totalfiles) AS STRING
+DIM SHARED gamefiles(1 TO totalfiles) AS GameFile
+
+FOR i = 1 TO totalfiles
+    INPUT #1, gamefilenames(i), gamefiles(i).blocks, gamefiles(i).server, gamefiles(i).event, gamefiles(i).displayname
+NEXT i
+
+CLOSE #1
 
 ' TODO: Each type of data (screens, usenet posts, events, etc.)
 '       as DAT files with text and lineout data as TXT files
@@ -173,7 +169,7 @@ CLOSE #1
 Initialize:     ' Initializes all variables for a new game.
 
 ' Initialize global variables
-ERASE cpmfiles$
+ERASE cpmfiles%
 cpmdisk$ = "A"
 cpmfilenum% = 0
 cpmspace% = disksize%
@@ -250,8 +246,28 @@ SELECT CASE cmd$
         END IF
 
     CASE "DIR"          ' Provides a directory listing for active drive
-        PRINT "DIR isn't written yet."
-        ' TAB can help with string formatting
+        IF cpmdisk$ = "A" THEN
+            PRINT "A: thing goes here later"
+        ELSEIF cpmfilenum% = 0 THEN
+            Delay(3): PRINT "No file"
+        ELSE
+            rows% = 0
+            file% = 0
+            WHILE rows% * 4 < cpmfilenum%
+                Delay (3): PRINT "B: "; : Disk (3)
+                count% = cpmfilenum% - file%
+                IF count% > 4 THEN count% = 4
+                FOR i% = 1 TO count%
+                    IF i% <> 1 THEN PRINT " : ";
+                    target = cpmfiles(rows% * 4 + i%)
+                    PRINT gamefiles(target).displayname;
+                    Delay (gamefiles(target).blocks)
+                    file% = file% + 1
+                NEXT i%
+                PRINT: rows% = rows% + 1
+            WEND
+            Delay(5)
+        END IF
 
     CASE "MONITOR"      ' System Monitor
         PRINT "MONITOR isn't written yet."
@@ -268,26 +284,17 @@ SELECT CASE cmd$
     CASE "QUIT"         ' Quit the game
         END
 
-    ' Command for debugging file operations
-    CASE "WRITEDATA"
-        OPEN "NETSIM.DAT" FOR OUTPUT AS #1
-        FOR i = 1 TO totallines
-            WRITE #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
+    ' Debug commands for DIR command
+    CASE "FILES"
+        cpmfilenum% = 5
+        FOR i = 1 TO 5
+            cpmfiles(i) = i
         NEXT i
-        CLOSE #1
 
-    ' Debug commands for STAT command
-    CASE "FULLDISK"
-        cpmspace% = 4
-
-    CASE "HALFDISK"
-        cpmspace% = INT(disksize% / 2)
-
-    CASE "FREEDISK"
-        cpmspace% = disksize%
-
-    CASE "RANDDISK"
-        cpmspace% = INT(RND * disksize% + 1)
+    CASE "FILENAME"
+        FOR i = 1 TO 5
+            PRINT "***" + gamefilenames(i) + "***"
+        NEXT i
 
     ' Debug commands for terminal color
     CASE "GREEN"
@@ -435,39 +442,6 @@ XPLOD:          ' The X-Series Probe Launcer and Orbiting Director, Version 3.
 '
 'Active I/O ports:
 '10 11 12 13 14 15 16 17
-
-
-'-=-=-=-=-=-=-=-=-=-=-=-'
-
-Events:
-' A single formatted response from a server.
-' Format: points%, oneshot%
-DATA 1      ' Number of outputs
-DATA "useless file", 0, 2, 3, "value"
-
-'-=-=-=-=-=-=-=-=-=-=-=-'
-
-Headers:    ' A formatted header for use in multiple screens
-' Format:
-DATA 0      ' Number of headers
-
-'-=-=-=-=-=-=-=-=-=-=-=-'
-
-Screens:    ' A formatted game screen with header and body
-' Format: header%, startline%, numlines%
-DATA 0      ' Number of game screens
-
-'-=-=-=-=-=-=-=-=-=-=-=-'
-
-GameFiles:  ' Data files inside the game
-' Format: filename$, size%, server%, event%
-DATA 2      ' Number of outputs
-DATA "EXAMPLE.COM", 20, 1, 1
-DATA "GARBAGE.GRB", 18, -1, 1
-
-'-=-=-=-=-=-=-=-=-=-=-=-'
-
-Servers:
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 

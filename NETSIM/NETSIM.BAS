@@ -30,6 +30,8 @@ DECLARE SUB Disksound (ticks%)                  ' Get a disk access sound for a 
 DECLARE SUB Linedelay ()                        ' Delay the local terminal for a linefeed
 DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
 DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
+DECLARE SUB Printdir ()                         ' Print the DIR command to the CP/M terminal
+DECLARE SUB Printstat ()                        ' Print the STAT command to the CP/M terminal
 DECLARE SUB Setdisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 
 ' Game constants
@@ -235,39 +237,10 @@ PRINT cpmdisk$;
 LINE INPUT ">", cmd$
 SELECT CASE cmd$
     CASE "STAT"         ' Provides disk usage information
-        IF cpmdisk$ = "B" THEN
-            PRINT "STAT?"
-            Delay (4)
-        ELSE
-            Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
-            readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
-            PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
-            PRINT STR$(cpmspace%) + "k"; : PRINT : PRINT
-        END IF
+        CALL Printstat
 
     CASE "DIR"          ' Provides a directory listing for active drive
-        IF cpmdisk$ = "A" THEN
-            PRINT "A: thing goes here later"
-        ELSEIF cpmfilenum% = 0 THEN
-            Delay(3): PRINT "No file"
-        ELSE
-            rows% = 0
-            file% = 0
-            WHILE rows% * 4 < cpmfilenum%
-                Delay (3): PRINT "B: "; : Disk (3)
-                count% = cpmfilenum% - file%
-                IF count% > 4 THEN count% = 4
-                FOR i% = 1 TO count%
-                    IF i% <> 1 THEN PRINT " : ";
-                    target = cpmfiles(rows% * 4 + i%)
-                    PRINT gamefiles(target).displayname;
-                    Delay (gamefiles(target).blocks)
-                    file% = file% + 1
-                NEXT i%
-                PRINT: rows% = rows% + 1
-            WEND
-            Delay(5)
-        END IF
+        CALL Printdir
 
     CASE "MONITOR"      ' System Monitor
         PRINT "MONITOR isn't written yet."
@@ -559,6 +532,46 @@ SUB Pause (ticks%)
     IF slowbaud THEN iter% = iter% * 5
     FOR k = 1 TO iter%
     NEXT k
+END SUB
+
+SUB Printdir
+' Print out the DIR command to the CP/M terminal
+' TODO: Finish A: drive array and printout procedure
+    IF cpmdisk$ = "A" THEN
+        PRINT "A: thing goes here later"
+    ELSEIF cpmfilenum% = 0 THEN
+        Delay (3): PRINT "No file"
+    ELSE
+        rows% = 0
+        file% = 0
+        WHILE rows% * 4 < cpmfilenum%
+            Delay (3): PRINT "B: "; : Disk (3)
+            count% = cpmfilenum% - file%
+            IF count% > 4 THEN count% = 4
+            FOR i% = 1 TO count%
+                IF i% <> 1 THEN PRINT " : ";
+                target = cpmfiles%(rows% * 4 + i%)
+                PRINT gamefiles(target).displayname;
+                Delay (gamefiles(target).blocks)
+                file% = file% + 1
+            NEXT i%
+            PRINT : rows% = rows% + 1
+        WEND
+        Delay (5)
+    END IF
+END SUB
+
+SUB Printstat
+' Print out the STAT command to the CP/M terminal
+    IF cpmdisk$ = "B" THEN
+        PRINT "STAT?"
+        Delay (4)
+    ELSE
+        Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
+        readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
+        PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
+        PRINT STR$(cpmspace%) + "k"; : PRINT : PRINT
+    END IF
 END SUB
 
 SUB Setdisk (newdisk$)

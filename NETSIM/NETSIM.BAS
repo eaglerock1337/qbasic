@@ -31,6 +31,7 @@ DECLARE SUB Linedelay ()                        ' Delay the local terminal for a
 DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
 DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
 DECLARE SUB Printdir ()                         ' Print the DIR command to the CP/M terminal
+DECLARE SUB Printdirout (filenum%, filedata%()) ' Helper routine for printing DIR command
 DECLARE SUB Printstat ()                        ' Print the STAT command to the CP/M terminal
 DECLARE SUB Setdisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 
@@ -58,8 +59,10 @@ CONST DEMO = 1
 
 ' Global variables
 DIM SHARED cpmdisk$             ' Current CP/M Disk Drive
-DIM SHARED cpmfiles%(40)        ' The list of files on the B: drive
-DIM SHARED cpmfilenum%          ' Number of files on B: drive
+DIM SHARED cpmanum%             ' Number of files on A: drive
+DIM SHARED cpmafiles%(16)       ' The list of files on the A: drive
+DIM SHARED cpmbnum%             ' Number of files on B: drive
+DIM SHARED cpmbfiles%(40)       ' The list of files on the B: drive
 DIM SHARED cpmspace%            ' Available B: drive space in KB
 DIM SHARED ramsize%             ' The size of of the CP/M system
 DIM SHARED slowbaud             ' If the terminal runs at 300 baud
@@ -150,7 +153,7 @@ DIM SHARED gamefilenames(1 TO totalfiles) AS STRING
 DIM SHARED gamefiles(1 TO totalfiles) AS GameFile
 
 FOR i = 1 TO totalfiles
-    INPUT #1, gamefilenames(i), gamefiles(i).blocks, gamefiles(i).server, gamefiles(i).event, gamefiles(i).displayname
+    INPUT #1, gamefiles(i).displayname, gamefiles(i).blocks, gamefiles(i).server, gamefiles(i).event, gamefilenames(i)
 NEXT i
 
 CLOSE #1
@@ -171,10 +174,13 @@ CLOSE #1
 Initialize:     ' Initializes all variables for a new game.
 
 ' Initialize global variables
-ERASE cpmfiles%
-cpmdisk$ = "A"
-cpmfilenum% = 0
+ERASE cpmafiles%, cpmbfiles%
+cpmanum% = 11: cpmbnum% = 0
+FOR i = 1 TO cpmanum%
+    cpmafiles%(i) = i
+NEXT i
 cpmspace% = disksize%
+cpmdisk$ = "A"
 ramsize% = 20
 slowbaud = TRUE
 remote = FALSE
@@ -259,9 +265,9 @@ SELECT CASE cmd$
 
     ' Debug commands for DIR command
     CASE "FILES"
-        cpmfilenum% = 5
+        cpmbnum% = 5
         FOR i = 1 TO 5
-            cpmfiles(i) = i
+            cpmbfiles%(i) = i + 12
         NEXT i
 
     CASE "FILENAME"
@@ -313,11 +319,9 @@ SELECT CASE cmd$
 
     CASE "A:"           ' Change to A drive
         Setdisk ("A")
-        Delay (4)
 
     CASE "B:"           ' Change to B drive
         Setdisk ("B")
-        Delay (4)
 
     CASE ""
         Delay (4)
@@ -536,21 +540,28 @@ END SUB
 
 SUB Printdir
 ' Print out the DIR command to the CP/M terminal
-' TODO: Finish A: drive array and printout procedure
     IF cpmdisk$ = "A" THEN
-        PRINT "A: thing goes here later"
-    ELSEIF cpmfilenum% = 0 THEN
+        CALL Printdirout(cpmanum%, cpmafiles%())
+    ELSE
+        CALL Printdirout(cpmbnum%, cpmbfiles%())
+    END IF
+END SUB
+
+SUB Printdirout (filenum%, filedata%())
+' Helper routine for printing DIR command
+    IF filenum% = 0 THEN
         Delay (3): PRINT "No file"
     ELSE
-        rows% = 0
-        file% = 0
-        WHILE rows% * 4 < cpmfilenum%
-            Delay (3): PRINT "B: "; : Disk (3)
-            count% = cpmfilenum% - file%
+        rows% = 0: file% = 0
+        header$ = cpmdisk$ + ": "
+        spacer$ = " : "
+        WHILE file% < filenum%
+            Delay (3): PRINT header$; : Disk (3)
+            count% = filenum% - file%
             IF count% > 4 THEN count% = 4
             FOR i% = 1 TO count%
-                IF i% <> 1 THEN PRINT " : ";
-                target = cpmfiles%(rows% * 4 + i%)
+                IF i% <> 1 THEN PRINT spacer$;
+                target = filedata%(file% + 1)
                 PRINT gamefiles(target).displayname;
                 Delay (gamefiles(target).blocks)
                 file% = file% + 1
@@ -570,7 +581,7 @@ SUB Printstat
         Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
         readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
         PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
-        PRINT STR$(cpmspace%) + "k"; : PRINT : PRINT
+        PRINT STR$(cpmspace% * 4) + "k"; : PRINT : PRINT
     END IF
 END SUB
 

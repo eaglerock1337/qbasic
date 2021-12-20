@@ -1,13 +1,12 @@
 December 25th, 1982, New York City
 
-You wake up on Christmas morning, excited to open your presents. You asked for
-a Commodore 64 this year, and are hoping to get it and some games to play, but
-were disappointed to find nothing but clothes and some Atari games. Afterwards,
-your parents surprise you return from the attic with some large gifts. "These
-are from your Uncle Joe," says Mom. You jump up to grab the presents and rip
-the first one open, but instead of the Commodore, you find an old Altair 8800.
-You stop and look at the cryptic box for a minute with dozens of red LEDs and
-switches on the front panel.
+You wake up on Christmas morning, excited to open your presents. Just like your
+friends, you asked for a Commodore 64, but were disappointed to find nothing
+but clothes and some Atari games. Afterwards, your parents surprise you as they
+return from the attic with some large gifts. "These are from your Uncle Joe,"
+says Mom. You jump up to grab the presents and rip the first one open, but
+instead of the Commodore, you find an old Altair 8800. You stop and look at
+the cryptic box with dozens of red LEDs and switches on the front panel.
 
 "I know it's not the computer you wanted," says Dad, "but we did say after the
 Atari for your 16th that big presents would have to wait. This machine was your
@@ -20,8 +19,8 @@ Hey Kiddo,
 
 I know you've been asking for a computer all year, and it's time you've had one
 of your own. This machine served me well for years, and it should do the same
-for you. Sorry I can't see you this year, but should be in New York soon. In
-the meantime, I hope to see you on-line soon!
+for you. Sorry I can't be there as I'm away for work, but I should be back in
+time for your birthday. In the meantime, I hope to see you on-line soon!
 
 Love, Uncle Joe
 
@@ -31,9 +30,13 @@ December 29th, 1982
 After 4 days of trying to figure out how to get the system up and running, you
 aren't much closer. You have everything hooked up, but can't get the disk drive
 to work. The manual talks about inputting a bootstrap loader to make the Altair
-smart enough to read from disk, but it involves a cryptic code and using the
-giant front panel and just makes no sense to you. As your friends are all
-playing their Commodore 64 games, you give up in frustration.
+smart enough to read from disk, but it involves a cryptic code called machine
+language and using the giant front panel.
+
+You continue to try to input the bootstrap loader, flipping the switches in
+sequence, but when you toggle the RUN switch at the end of it all, nothing
+happens. As your friends are playing their Commodore games during the week off
+from school, you give up in frustration.
 
 
 January 24th, 1983, One Month Later
@@ -58,9 +61,8 @@ Hey, kiddo.
 
 Congrats on getting this thing running after all. I'm sure you were cursing my
 name and wishing you had a Commodore the whole time, but trust me on this one.
-Most people can't appreciate what a machine like this can do. Think about how
-many of your friends asked for a 'puter for Christmas just so they could play
-video games?
+Most people can't appreciate what a machine like this can do. How many of your
+friends asked for a 'puter for Christmas just so they could play video games?
 
 Despite the startup procedure and the lack of a graphics chip, this Altair can
 do everything else that matters, including getting on-line. My old floppy bay
@@ -71,24 +73,15 @@ its potential.
 
 Why pick you for this honor, I hear you ask? Your mom happened to tell me how
 you got your own phone line by promising never to call long-distance and how
-relieved she is that you've kept your word. Considering the calls we had, I had
-to see for myself, and sure enough, you've been fooling ol' Ma Bell from the
-start. Once I learned that you've been phreaking, I knew I had to pay attention
-to you and had to see what you could do with that phone connected to a modem.
+relieved she is that you've kept your word. Considering how often we talk,
+you've been fooling ol' Ma Bell from the start. Once I learned that, I knew
+I had to see what you could do with that phone connected to a modem.
 
-...How did I get your phone records, I hear you ask? Let's just say phreaking
-isn't the only way to play with our favorite crumbling monopoly. I found a
-little on-line experiment of theirs and already figured out how to exploit it.
-So we can stop pretending that you're more than capable of figuring this stuff
-out on your own. But just like any other 16-year-old, you're lazy and require
-motivation, so that's where I come in.
-
-Since you beat my first challenge of getting the thing running, here's my next
-one for you: if this machine has 64K of RAM, why is it only recognizing 20K?
-I could give you the answer, but how will you learn if I do? Let's see if you
-can figure it out on your own. If you can't, I _am_ still your uncle and here
-to help you out. If you ever need a hand, just use the HINT program I wrote
-which will dial up my machine where I can give you some tips.
+So here's my next challenge: if this machine has 64K of RAM, why is it only
+showing 20K? Let's see if you can figure it out on your own. If you can't, I
+_am_ still your uncle and here to help you out. If you ever need a hand, just
+use the HINT program I wrote which will dial up my machine where I can give
+you some tips.
 
 Now the ball is in your court. You have the tools, get the talent. Good luck!
 

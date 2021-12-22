@@ -1,0 +1,61 @@
+' Mission Ideas
+'
+' Resize CP/M - Grants access to certain programs (MODEM.COM, SCORE)
+' Connect to BellNet and find the news server (link to HACCBBS offline)
+' Connect to News Server for first time
+' Conect to HACCBBS for the first time
+' Download Modem Test Utility and use to determine you have 300bps
+' Help your first person on USENET (MOVCPM)
+' Contact from G4ndalf - get the cracked MODEM application
+' - allows selection of 2400BPS but doesn't work until QAM works
+' - enables public filesystem access for your account
+' Help two more USENET users
+' Unlock QAM and 2400BPS from AT&T
+'
+'- Unlock color
+'- Unlock long-distance phreaking
+'- Unlock side missions?
+'- Unlock NASA Gateway
+'- Get password to NASA Gateway User
+'- Find better password on network somewhere
+
+
+' CPM Notes:
+' A: - Switch to A: Disk - Contains CPM and program, disk full
+' B: - Switch to B: Disk - Contains
+' DIR - List Directory
+' ERA - Erase File
+' A: STAT.COM, HELP.COM, MODEM.COM, MENU.COM, SCORE.COM, HINT.COM
+
+' MODEM.COM - Program for dialing out to computers
+' The name couldn't be more vanilla if it tried.
+
+' Improvements to include:
+' ISP Beta Program - Faster network transmission and display times
+' Terminal Proxy - Connect through other servers
+' Color Terminal Support - Download illegally
+' Favorites - Address book for servers found on the Internet
+
+
+'-=-=-=-=-=-=-=-=-=-=-=-'
+
+
+'D>SURVEY
+'                *** System Survey (June 82) ***
+'
+'Drive A: 28K bytes in 3 files with 8148K bytes remaining
+'Drive C: 32K bytes in 9 files with 8160K bytes remaining
+'Drive D: 32K bytes in 12 files with 8160K bytes remaining
+'
+'Memory map:
+'0       8       16      24      32      40      48      56      64
+'|       |       |       |       |       |       |       |       |
+' TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTCCCBBBBBBB
+'T=TPA   C=CPM   B=BIOS or unassigned    R=ROM or bad
+'BIOS at E603    iobyte 01       drive 03        BDOS at D806
+'
+'65535 Bytes RAM         0 Bytes ROM             55302 Bytes in TPA
+'0 Bytes Empty           65535 Total Active Bytes
+'
+'Active I/O ports:
+'10 11 12 13 14 15 16 17

@@ -1,0 +1,10 @@
+' Computers to include:
+
+' Apple II
+' TRS-80
+' Atari 800
+' Commodore VIC-20
+' Commodore 64
+' ZX Spectrum
+' TI-99/4
+' IBM PC Compatible

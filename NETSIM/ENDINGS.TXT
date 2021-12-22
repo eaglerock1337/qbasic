@@ -1,0 +1,54 @@
+# General ending - no score/prestige
+
+You didn't really do much, did you?
+
+# General ending - some score/no prestige
+
+You managed to get the machine running and play around a bit, but didn't
+impress anyone.
+
+# General ending - some score/prestige
+
+You played around a bit and managed to show some promise.
+
+# General ending - more score/prestige
+
+You had a respectible showing today.
+
+# General ending - even more score/prestige
+
+Today was a good day.
+
+# Long distance charge ending
+
+You connected to the remote server, but forgot your promise to your mother.
+You get in trouble once your parents see the phone charge, and you get your
+privileges taken away. Your computer, while you've gotten used to it and are
+eager to do more, won't be able to use its modem for some time.
+
+# Minor cyber crime ending
+
+A few days after your antics online, you get a visit from the NYPD inquiring
+about illegal cyberactivity. Your computer is confiscated and you spend the
+night in jail as your equipment is searched for illegal software and activity.
+While you were let off and were able to go home the next day, the computer was
+promptly taken away by your parents, and you'll never touch a computer again
+while living under their roof.
+
+# Medium cyber crime ending
+
+Two days after your antics online, you get a visit from the NYPD inquiring
+about your illegal cyberactivity. You are promptly arrested and your computer
+confiscated. Illegal software and activity found on your computer has made for
+a strong district attorney case. If you don't go to jail, you can expect some
+community service time, as well as a permanent grounded status at home.
+
+# Major cyber crime ending
+
+The next morning, your apartment is stormed by NYPD and SWAT who come and take
+you and your computer by force. You are arrested and detained while the Altair
+is examined for illegal software and activity. You are introduced to a public
+defender who explains that the case against you is strong and that you will be
+tried as an adult, so a plea bargain is your best chance. The DA offers you a
+5-year sentence as a bargain, which you quickly take to avoid even longer
+prison time. You spend the rest of your adolescence in prison.

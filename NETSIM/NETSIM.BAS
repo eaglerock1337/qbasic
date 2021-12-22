@@ -26,7 +26,7 @@
 DECLARE SUB Delay (ticks%)                      ' Delay by a set number of ticks
 DECLARE SUB Disk (seconds%)                     ' Simulate disk access sounds for number of seconds
 DECLARE SUB Diskpause (ticks%)                  ' Play a sound pause for a number of ticks (from 2^0 to 2^4)
-DECLARE SUB Disksound (ticks%)                  ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
+DECLARE SUB Diskseek (ticks%)                  ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
 DECLARE SUB Linedelay ()                        ' Delay the local terminal for a linefeed
 DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
 DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
@@ -447,7 +447,12 @@ END SUB
 SUB Disk (seconds%)
 ' Simulate disk access sounds for number of seconds
     ticks% = seconds% * tickrate%
-    DO WHILE ticks% > 0
+
+    ' Perform initial seek
+    Diskseek (16)
+    ticks% = ticks% - 16
+
+    DO WHILE ticks% >= 16
         ' Pause before/between disk operations
         pausetime% = 2 ^ INT(RND * 3 + 3)       ' 2^3 - 2^5
         Diskpause (pausetime%)
@@ -456,37 +461,45 @@ SUB Disk (seconds%)
         ' Pick a random disk event
         roll% = INT(RND * 100)
         SELECT CASE roll%
-            CASE IS < 60    ' One long access sound
-                Disksound (32)
-                ticks% = ticks% - 32
+            CASE IS < 75    ' One quick seek and read
+                Diskseek (2)
+                Diskpause (8)
+                ticks% = ticks% - 10
 
-            CASE IS < 85    ' One quick access sound
-                Disksound (4)
-                ticks% = ticks% - 4
+            CASE IS < 85    ' One medium seek
+                Diskseek (4)
+                Diskpause (8)
+                ticks% = ticks% - 12
 
-            CASE IS < 90    ' Three quick access sounds
-                FOR i = 1 TO 3
-                    Disksound (4)
-                    Diskpause (8)
+            CASE IS < 90    ' Two quick seeks
+                FOR i = 1 TO 2
+                    Diskseek (2)
+                    Diskpause (16)
                 NEXT i
                 ticks% = ticks% - 36
 
-            CASE IS < 95    ' Quick-long-quick sequence
-                Disksound (4)
-                Diskpause (8)
-                Disksound (32)
-                Diskpause (8)
-                Disksound (4)
-                ticks% = ticks% - 56
+            CASE IS < 95    ' Three quick seeks
+                FOR i = 1 TO 3
+                    Diskseek (2)
+                    Diskpause (16)
+                NEXT i
+                ticks% = ticks% - 54
 
-            CASE ELSE       ' Two long access sounds
-                Disksound (32)
+            CASE ELSE       ' Jump and two quick seeks
+                Diskseek (8)
+                Diskpause (16)
+                Diskseek (2)
                 Diskpause (8)
-                Disksound (32)
+                Diskseek (2)
                 Diskpause (8)
-                ticks% = ticks% - 80
+                Diskseek (8)
+                Diskpause (16)
+                ticks% = ticks% - 68
         END SELECT
     LOOP
+
+    ' Peform final disk seek and add time delay
+    Diskseek (16)
     Delay (seconds%)
 END SUB
 
@@ -495,8 +508,8 @@ SUB Diskpause (ticks%)
     PLAY "T255P" + STR$(INT(tickrate% / ticks%))
 END SUB
 
-SUB Disksound (ticks%)
-' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
+SUB Diskseek (ticks%)
+' Get a disk seek sound for a number of ticks (from 2^0 to 2^4)
     PLAY "T255MLMFO1L" + STR$(INT(tickrate% / ticks%)) + "A"
 END SUB
 

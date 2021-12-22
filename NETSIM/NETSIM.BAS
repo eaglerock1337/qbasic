@@ -1,4 +1,3 @@
-DECLARE SUB CPMCommandB (cmd$)
 'The Internet Simulator by Peter Marks
 'A text-based adventure game based on the early 80's Internet.
 'The idea is from old code I wrote when I was 15 and I recently rediscovered.
@@ -27,7 +26,7 @@ DECLARE SUB CPMCommandB (cmd$)
 DECLARE SUB CPMBoot ()                          ' CP/M Boot Routine
 DECLARE SUB CPMCommand (cmd$)                   ' Process a command from the CPM command prompt
 DECLARE SUB CPMCommandA (cmd$)                  ' Process a command from the A: Drive
-DECLARE SUB CPMCommandA (cmd$)                  ' Process a command from the B: Drive
+DECLARE SUB CPMCommandB (cmd$)                  ' Process a command from the B: Drive
 DECLARE SUB CPMDir ()                           ' Print the DIR command to the CP/M terminal
 DECLARE SUB CPMDirOut (filenum%, filedata%())   ' Helper routine for printing DIR command
 DECLARE SUB CPMOutput (start%, numlines%)       ' Perform a lineout from CP/M

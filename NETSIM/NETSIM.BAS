@@ -30,13 +30,18 @@ DECLARE SUB CPMCommandA (cmd$)                  ' Process a command from the A: 
 DECLARE SUB CPMCommandA (cmd$)                  ' Process a command from the B: Drive
 DECLARE SUB CPMDir ()                           ' Print the DIR command to the CP/M terminal
 DECLARE SUB CPMDirOut (filenum%, filedata%())   ' Helper routine for printing DIR command
+DECLARE SUB CPMOutput (start%, numlines%)       ' Perform a lineout from CP/M
 DECLARE SUB CPMStat ()                          ' Print the STAT command to the CP/M terminal
 DECLARE SUB Delay (ticks%)                      ' Delay by a set number of ticks
 DECLARE SUB Disk (seconds%)                     ' Simulate disk access sounds for number of seconds
 DECLARE SUB DiskPause (ticks%)                  ' Play a sound pause for a number of ticks (from 2^0 to 2^4)
 DECLARE SUB DiskSeek (ticks%)                   ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
-DECLARE SUB Linedelay ()                        ' Delay the local terminal for a linefeed
-DECLARE SUB Lineout (startline%, numlines%)     ' Perform a lineout of the requested text lines
+DECLARE SUB EventTask (number%)                 ' Process any event tasks by its number in the event list
+DECLARE SUB EventLoad ()                        ' Process all the previous game events for loading a saved game
+DECLARE SUB EventScore (number%)                ' Process a game event, update your score, and display event text
+DECLARE SUB LineDelay ()                        ' Delay the local terminal for a linefeed
+DECLARE SUB Lineout (start%, numlines%, modem)  ' Perform a lineout of the requested text lines
+DECLARE SUB LineoutDemo (start%, numlines%)     ' Perform a lineout from the demo text
 DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
 DECLARE SUB SetDisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 
@@ -59,21 +64,27 @@ CONST PURPLE = 5:               CONST MAGENTA = 13
 CONST OLIVE = 6:                CONST YELLOW = 14
 CONST SILVER = 7:               CONST WHITE = 15
 
-' Text type contstants
-CONST DEMO = 1
+' For selecting the default color
+CONST DEFAULT = -1
 
 ' Global variables
-DIM SHARED cpmdisk$             ' Current CP/M Disk Drive
 DIM SHARED cpmanum%             ' Number of files on A: drive
 DIM SHARED cpmafiles%(16)       ' The list of files on the A: drive
 DIM SHARED cpmbnum%             ' Number of files on B: drive
 DIM SHARED cpmbfiles%(40)       ' The list of files on the B: drive
+DIM SHARED cpmcolor             ' The default terminal color used by CP/M
+DIM SHARED cpmdisk$             ' Current CP/M Disk Drive
+DIM SHARED cpmramsize%          ' The size of of the CP/M system
 DIM SHARED cpmspace%            ' Available B: drive space in KB
-DIM SHARED ramsize%             ' The size of of the CP/M system
-DIM SHARED slowbaud             ' If the terminal runs at 300 baud
-DIM SHARED remote               ' If the terminal is outputting remote data
-DIM SHARED colorterm            ' If terminal color is enabled
-DIM SHARED defaultcolor         ' The default terminal color
+DIM SHARED gameloaded           ' If the game is loaded
+DIM SHARED gameevents%(100)     ' List of game events that have occurred
+DIM SHARED gameeventtotal%      ' Total game events that have taken place
+DIM SHARED modemcolor           ' If terminal color is enabled
+DIM SHARED modemtextcolor       ' Default modem text color
+DIM SHARED modemslowbaud        ' If the terminal runs at 300 baud
+
+' Debug Globals (to be removed)
+DIM SHARED demoremote           ' If the demo text is remote or not
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -128,26 +139,35 @@ END TYPE
 Loaddata:       ' Load all game data from .DAT and .TXT files
 
 ' Open files for reading game text
-OPEN "NETSIM\DEMO.DAT" FOR INPUT AS #1
+OPEN "NETSIM\CPM.DAT" FOR INPUT AS #1
+OPEN "NETSIM\DEMO.DAT" FOR INPUT AS #2
 
 ' Create data length and offset variables
+DIM SHARED cpmoffset AS INTEGER
+DIM SHARED cpmlines AS INTEGER
 DIM SHARED demooffset AS INTEGER
 DIM SHARED demolines AS INTEGER
 DIM SHARED totallines AS INTEGER
 
-demooffset = 0
-INPUT #1, demolines
-totallines = demolines
+' Read file headers and populate variables
+cpmoffset = 0
+INPUT #1, cpmlines
+demooffset = cpmlines
+INPUT #2, demolines
+totallines = cpmlines + demolines
 
 ' Read demo text data
 DIM SHARED lines(1 TO totallines) AS STRING
 DIM SHARED linedata(1 TO totallines) AS TextData
-FOR i = 1 TO totallines
+FOR i = 1 TO cpmlines
     INPUT #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
+NEXT i
+FOR i = 1 TO demolines
+    INPUT #2, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
 NEXT i
 
 ' Close game text files
-CLOSE #1
+CLOSE #1, #2
 
 ' Retrieve game file data
 OPEN "NETSIM\FILES.DAT" FOR INPUT AS #1
@@ -163,6 +183,9 @@ NEXT i
 
 CLOSE #1
 
+' Indicate a game isn't loaded yet
+gameloaded = FALSE
+
 ' TODO: Each type of data (screens, usenet posts, events, etc.)
 '       as DAT files with text and lineout data as TXT files
 '       Functions for loading each type of data
@@ -176,55 +199,59 @@ CLOSE #1
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
+Menu:           ' Main game menu
 
-
-menu:           ' Main game menu
-
+' Temporary Menu (to be moved to a proper subroutine)
 CLS
 COLOR OLIVE, BLACK
 PRINT : PRINT : PRINT
 PRINT "1 - New Game"
 PRINT "2 - Back to CP/M"
 PRINT "3 - Quit"
-LINE INPUT "Select: ", menu$
+LINE INPUT "Select: ", menuselect$
 
-SELECT CASE menu$
+SELECT CASE menuselect$
     CASE "1"
-        GOTO Initialize:
+        GOTO Initialize
     CASE "2"
-        GOTO cpm
+        IF gameloaded THEN GOTO CPM
     CASE "3"
         END
 END SELECT
 
-GOTO menu
+GOTO Menu
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
 Initialize:     ' Initializes all variables for a new game and boot CP/M
 
 ' Initialize global variables
-ERASE cpmafiles%, cpmbfiles%
-cpmanum% = 11: cpmbnum% = 0
-FOR i = 1 TO cpmanum%
+cpmanum% = 11
+cpmbnum% = 0
+cpmcolor = GREEN
+cpmdisk$ = "A"
+cpmramsize% = 20
+cpmspace% = disksize%
+gameeventtotal% = 0
+gameloaded = TRUE
+modemcolor = FALSE
+modemtextcolor = OLIVE
+modemslowbaud = TRUE
+
+ERASE cpmafiles%, cpmbfiles%, gameevents%
+
+FOR i = 1 TO cpmanum%   ' Initialize A: drive files
     cpmafiles%(i) = i
 NEXT i
-cpmspace% = disksize%
-cpmdisk$ = "A"
-ramsize% = 20
-slowbaud = TRUE
-remote = FALSE
-colorterm = FALSE
-defaultcolor = GREEN
 
 ' CP/M Boot Routine
 CALL CPMBoot
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-cpm:            ' CP/M Disk Prompt
+CPM:            ' CP/M Disk Prompt
 
-COLOR defaultcolor, BLACK
+COLOR cpmcolor, BLACK
 PRINT cpmdisk$;
 LINE INPUT ">", cmd$
 
@@ -232,7 +259,7 @@ LINE INPUT ">", cmd$
 IF cmd$ = "QUIT" THEN GOTO menu
 CALL CPMCommand(cmd$)
 
-GOTO cpm
+GOTO CPM
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -283,9 +310,9 @@ XPLOD:          ' The X-Series Probe Launcer and Orbiting Director, Version 3.
 SUB CPMBoot
 ' CP/M Boot Routine
     CLS
-    COLOR defaultcolor, BLACK
+    COLOR cpmcolor, BLACK
     Disk (4)
-    CALL Lineout(1, 3)
+    CALL CPMOutput(1, 3)          ' TODO: change to new lineout
     Delay (4)
     PRINT
     Disk (2)
@@ -307,47 +334,41 @@ SUB CPMCommand (cmd$)
                 cpmbfiles%(i) = i + 12
             NEXT i
 
-        CASE "FILENAME"
-            FOR i = 1 TO 5
-                PRINT "***" + gamefilenames(i) + "***"
-            NEXT i
-
         ' Debug commands for terminal color
         CASE "GREEN"
-            defaultcolor = GREEN
+            cpmcolor = GREEN
 
         CASE "AMBER"
-            defaultcolor = OLIVE
+            cpmcolor = OLIVE
 
-        ' Debug commands for Lineout subroutine
+        ' Debug commands for Lineout subroutine demos
         CASE "SATURN"
-            CALL Lineout(65, 34)
+            CALL Lineoutdemo(42, 33)
 
         CASE "TEST"
-            CALL Lineout(1, totallines)
+            CALL Lineoutdemo(1, demolines)
+
+        CASE "REMOTE"
+            IF demoremote THEN
+                demoremote = FALSE
+            ELSE
+                demoremote = TRUE
+            END IF
 
         ' Debug command for toggling terminal color
         CASE "COLOR"
-            IF colorterm THEN
-                colorterm = FALSE
+            IF modemcolor THEN
+                modemcolor = FALSE
             ELSE
-                colorterm = TRUE
+                modemcolor = TRUE
             END IF
 
         ' Debug command for toggling baud rate
         CASE "BAUD"
-            IF slowbaud THEN
-                slowbaud = FALSE
+            IF modemslowbaud THEN
+                modemslowbaud = FALSE
             ELSE
-                slowbaud = TRUE
-            END IF
-
-        ' Debug command for toggling remote output
-        CASE "REMOTE"
-            IF remote THEN
-                remote = FALSE
-            ELSE
-                remote = TRUE
+                modemslowbaud = TRUE
             END IF
 
         ' Debug the Delay() tickrate
@@ -363,11 +384,11 @@ SUB CPMCommand (cmd$)
             ' Prepare for running commands by disk
             cmddisk$ = cpmdisk$
 
-            ' If command is preceded by a drive letter
+            ' Handle drive prefixes (e.g. A:STAT, B:TERM)
             IF LEN(cmd$) >= 2 AND MID$(cmd$, 2, 1) = ":" THEN
                 cmddisk$ = MID$(cmd$, 1, 1)
 
-                ' Invalid drive select
+                ' Invalid drive select handling
                 IF cmddisk$ <> "A" AND cmddisk$ <> "B" THEN
                     cpmdisk$ = "A"
                     PRINT "Bdos Err On " + cmddisk$;
@@ -376,13 +397,15 @@ SUB CPMCommand (cmd$)
                     EXIT SUB
                 END IF
 
-                IF LEN(cmd$) >= 3 THEN
-                    cmddisk$ = MID$(cmd$, 1, 1)
-                    cmd$ = MID$(cpm$, 3)
-                ELSE
+                ' Change active drive
+                IF LEN(cmd$) = 2 THEN
                     SetDisk (cmddisk$)
                     EXIT SUB
                 END IF
+
+                ' Prepare command variables for disk processing
+                cmddisk$ = MID$(cmd$, 1, 1)
+                cmd$ = MID$(cpm$, 3)
             END IF
 
             ' Process commands from disk
@@ -426,6 +449,13 @@ END SUB
 SUB CPMCommandB (cmd$)
 ' Process a command from the B: Drive
     SELECT CASE cmd$
+        CASE "COLOR"        ' COLOR.COM - Color 
+            IF modemcolor THEN
+                modemcolor = FALSE
+            ELSE
+                modemcolor = TRUE
+            END IF
+
         CASE ELSE
             PRINT cmd$ + "?"
             Delay (4)
@@ -464,8 +494,25 @@ SUB CPMDirOut (filenum%, filedata%())
             NEXT i%
             PRINT : rows% = rows% + 1
         WEND
-        Delay (3)
     END IF
+END SUB
+
+SUB CPMOutput (start%, numlines%)      
+' Perform CP/M text output
+    FOR i = cpmoffset + start% TO cpmoffset + start% + numlines% - 1
+        IF linedata(i).fgcolor = DEFAULT THEN
+            COLOR cpmcolor, BLACK
+        ELSE
+            COLOR linedata(i).fgcolor, linedata(i).bgcolor
+        END IF
+
+        IF linedata(i).linefeed THEN CALL LineDelay
+        PRINT lines(i);
+        IF linedata(i).linefeed THEN
+            CALL LineDelay
+            PRINT
+        END IF
+    NEXT i
 END SUB
 
 SUB CPMStat
@@ -544,7 +591,7 @@ SUB Disk (seconds%)
         END SELECT
     LOOP
 
-    ' Peform final disk seek if over 1 second and add time delay
+    ' Perform final disk seek if over 1 second and add time delay
     IF seconds% > 1 THEN DiskSeek (16)
     Delay (seconds%)
 END SUB
@@ -559,40 +606,73 @@ SUB DiskSeek (ticks%)
     PLAY "T255MLMFO1L" + STR$(INT(tickrate% / ticks%)) + "A"
 END SUB
 
-SUB Linedelay
+SUB EventTask (number%)
+' Process any event tasks by its number in the event list
+    ' Look up the event in the list
+    ' Process each individual instructions (editing data, outputs, etc.)
+END SUB
+
+SUB EventLoad
+' Process all the previous game events for loading a saved game
+    ' For each item in the list, call GameEvent
+    ' Updates all the stuff without 
+END SUB
+
+SUB EventScore (number%)
+' Process a game event, update your score, and display event text
+    CALL EventTask (number%)
+    ' Update score from event list
+    ' Display text from the event text (optional)
+    gameeventtotal% = gameeventtotal% + 1
+    gameevents%(gameeventtotal%) = number%
+END SUB
+
+SUB LineDelay
 ' Delay the local terminal for a linefeed
     FOR k = 1 TO tickspeed% * 25
     NEXT k
 END SUB
 
-SUB Lineout (startline%, numlines%)
-' Perform a lineout of the requested text lines
+SUB Lineout (start%, numlines%, modem)
+' Perform a terminal lineout of the requested text lines
     sounds$ = "T255MSMFO4L64A-"
-    IF slowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
+    IF modemslowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
-    FOR i = startline% TO startline% + numlines% - 1
-        IF colorterm = TRUE THEN COLOR linedata(i).fgcolor, linedata(i).bgcolor
-        IF remote THEN
+    FOR i = start% TO start% + numlines% - 1
+        IF modemcolor THEN 
+            IF linedata(i).fgcolor = DEFAULT THEN 
+                COLOR modemtextcolor, BLACK
+            ELSE
+                COLOR linedata(i).fgcolor, linedata(i).bgcolor
+            END IF
+        END IF
+
+        IF modem THEN
             FOR j = 1 TO LEN(lines(i))
                 char$ = MID$(lines(i), j, 1)
                 PRINT char$;
                 IF char$ <> " " THEN PLAY sounds$
                 Pause (1)
             NEXT j
-            CALL Linedelay
+            CALL LineDelay
         ELSE
-            IF linedata(i).linefeed THEN CALL Linedelay
+            IF linedata(i).linefeed THEN CALL LineDelay
             PRINT lines(i);
-            IF linedata(i).linefeed THEN CALL Linedelay
+            IF linedata(i).linefeed THEN CALL LineDelay
         END IF
         IF linedata(i).linefeed THEN PRINT
     NEXT i
 END SUB
 
+SUB LineoutDemo (start%, numlines%)
+' Perform a lineout from the demo text
+    CALL Lineout(demooffset + start%, numlines%, demoremote)
+END SUB
+
 SUB Pause (ticks%)
 ' Pause the remote terminal for x ticks
     iter% = tickspeed% * ticks%
-    IF slowbaud THEN iter% = iter% * 5
+    IF modemslowbaud THEN iter% = iter% * 5
     FOR k = 1 TO iter%
     NEXT k
 END SUB

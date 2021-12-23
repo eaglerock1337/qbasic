@@ -313,9 +313,7 @@ SUB CPMBoot
     Disk (4)
     CALL CPMOutput(1, 3)          ' TODO: change to new lineout
     Delay (4)
-    PRINT
-    Disk (2)
-    Delay (4)
+    PRINT: Disk (1): Delay (2)
 END SUB
 
 SUB CPMCommand (cmd$)
@@ -342,7 +340,7 @@ SUB CPMCommand (cmd$)
 
         ' Debug commands for Lineout subroutine demos
         CASE "SATURN"
-            CALL Lineoutdemo(42, 33)
+            CALL Lineoutdemo(41, 34)
 
         CASE "TEST"
             CALL Lineoutdemo(1, demolines)
@@ -449,11 +447,7 @@ SUB CPMCommandB (cmd$)
 ' Process a command from the B: Drive
     SELECT CASE cmd$
         CASE "COLOR"        ' COLOR.COM - Color 
-            IF modemcolor THEN
-                modemcolor = FALSE
-            ELSE
-                modemcolor = TRUE
-            END IF
+            PRINT "A:COLOR.COM isn't written yet."
 
         CASE ELSE
             PRINT cmd$ + "?"
@@ -481,14 +475,14 @@ SUB CPMDirOut (filenum%, filedata%())
         spacer$ = " : "
         Disk (1)
         WHILE file% < filenum%
-            Delay (1): PRINT header$; : Delay (1)
+            PRINT header$; : Delay (1)
             count% = filenum% - file%
             IF count% > 4 THEN count% = 4
             FOR i% = 1 TO count%
                 IF i% <> 1 THEN PRINT spacer$;
                 target = filedata%(file% + 1)
                 PRINT gamefiles(target).displayname;
-                Delay (3)
+                Delay (2)
                 file% = file% + 1
             NEXT i%
             PRINT : rows% = rows% + 1
@@ -679,8 +673,8 @@ END SUB
 SUB SetDisk (newdisk$)
 ' Set the CP/M disk drive to specified disk
     IF cpmdisk$ <> newdisk$ THEN
-        Disk (2)
-        Delay (25)
+        Disk (1)
+        Delay (5)
     END IF
     cpmdisk$ = newdisk$
 END SUB

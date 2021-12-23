@@ -1,3 +1,4 @@
+DECLARE SUB LinefeedDelay ()
 'The Internet Simulator by Peter Marks
 'A text-based adventure game based on the early 80's Internet.
 'The idea is from old code I wrote when I was 15 and I recently rediscovered.
@@ -31,17 +32,18 @@ DECLARE SUB CPMDir ()                           ' Print the DIR command to the C
 DECLARE SUB CPMDirOut (filenum%, filedata%())   ' Helper routine for printing DIR command
 DECLARE SUB CPMOutput (start%, numlines%)       ' Perform a lineout from CP/M
 DECLARE SUB CPMStat ()                          ' Print the STAT command to the CP/M terminal
-DECLARE SUB Delay (ticks%)                      ' Delay by a set number of ticks
 DECLARE SUB Disk (seconds%)                     ' Simulate disk access sounds for number of seconds
 DECLARE SUB DiskPause (ticks%)                  ' Play a sound pause for a number of ticks (from 2^0 to 2^4)
 DECLARE SUB DiskSeek (ticks%)                   ' Get a disk access sound for a number of ticks (from 2^0 to 2^4)
 DECLARE SUB EventTask (number%)                 ' Process any event tasks by its number in the event list
 DECLARE SUB EventLoad ()                        ' Process all the previous game events for loading a saved game
 DECLARE SUB EventScore (number%)                ' Process a game event, update your score, and display event text
-DECLARE SUB LineDelay ()                        ' Delay the local terminal for a linefeed
+DECLARE SUB Initialize ()                       ' Initialize global game variables for a new game
+DECLARE SUB LinefeedDelay ()                    ' Delay the local terminal for a linefeed
 DECLARE SUB Lineout (start%, numlines%, modem)  ' Perform a lineout of the requested text lines
+DECLARE SUB LineoutDelay (ticks%)               ' Delay by a set number of ticks
 DECLARE SUB LineoutDemo (start%, numlines%)     ' Perform a lineout from the demo text
-DECLARE SUB Pause (ticks%)                      ' Pause the remote terminal for x ticks
+DECLARE SUB RemoteDelay (ticks%)                ' Pause the remote terminal for x ticks
 DECLARE SUB SetDisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 
 ' Game constants
@@ -86,8 +88,9 @@ DIM SHARED modemslowbaud        ' If the terminal runs at 300 baud
 DIM SHARED demoremote           ' If the demo text is remote or not
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
-
 ' Custom data types
+'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
+
 TYPE TextData                   ' Text string metadata
     fgcolor AS INTEGER          ' Text foreground color (if enabled)
     bgcolor AS INTEGER          ' Text background color (if enabled)
@@ -134,8 +137,8 @@ TYPE GameComputer               ' Different model computers inside the game
 END TYPE
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
-
-Loaddata:       ' Load all game data from .DAT and .TXT files
+' Load all game data from .DAT and .TXT files
+'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
 ' Open files for reading game text
 OPEN "NETSIM\CPM.DAT" FOR INPUT AS #1
@@ -153,7 +156,7 @@ cpmoffset = 0
 INPUT #1, cpmlines
 demooffset = cpmlines
 INPUT #2, demolines
-totallines = cpmlines + demolines + 1
+totallines = cpmlines + demolines
 
 ' Read demo text data
 DIM SHARED lines(1 TO totallines) AS STRING
@@ -185,36 +188,33 @@ CLOSE #1
 ' Indicate a game isn't loaded yet
 gameloaded = FALSE
 
-' TODO: Each type of data (screens, usenet posts, events, etc.)
-'       as DAT files with text and lineout data as TXT files
-'       Functions for loading each type of data
-'       Variables for text and metadata
-' E.G.: USENET.DAT holds the usenet post metadata
-'       USENET.TXT holds the text and lineout data
-'       LoadUsenet() loads the usenet metadata
-'       LoadLines("USENET.TXT") loads the lineout data
-'       usenet(totusenet%) holds the usenet metadata
-'       usenetlines$(totusenetlines%) holds the lineout data
-
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
 menu:           ' Main game menu
 
-' Temporary Menu (to be moved to a proper subroutine)
+' Alpha development menu (none of this stays, capiche?)
 CLS
 COLOR OLIVE, BLACK
 PRINT : PRINT : PRINT
 PRINT "1 - New Game"
 PRINT "2 - Back to CP/M"
-PRINT "3 - Quit"
+PRINT "3 - Reset Altair"
+PRINT "4 - Quit"
 LINE INPUT "Select: ", menuselect$
 
 SELECT CASE menuselect$
     CASE "1"
-        GOTO Initialize
+        CALL Initialize
+        CALL CPMBoot
+        GOTO CPM
     CASE "2"
-        IF gameloaded THEN GOTO cpm
+        IF gameloaded THEN GOTO CPM
     CASE "3"
+        IF gameloaded THEN
+            CALL CPMBoot
+            GOTO CPM
+        END IF
+    CASE "4"
         END
 END SELECT
 
@@ -222,33 +222,7 @@ GOTO menu
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-Initialize:     ' Initializes all variables for a new game and boot CP/M
-
-' Initialize global variables
-cpmanum% = 11
-cpmbnum% = 0
-cpmcolor = GREEN
-cpmdisk$ = "A"
-cpmramsize% = 20
-cpmspace% = disksize%
-gameeventtotal% = 0
-gameloaded = TRUE
-modemcolor = FALSE
-modemtextcolor = OLIVE
-modemslowbaud = TRUE
-
-ERASE cpmafiles%, cpmbfiles%, gameevents%
-
-FOR i = 1 TO cpmanum%   ' Initialize A: drive files
-    cpmafiles%(i) = i
-NEXT i
-
-' CP/M Boot Routine
-CALL CPMBoot
-
-'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
-
-cpm:            ' CP/M Disk Prompt
+CPM:            ' CP/M Disk Prompt
 
 COLOR cpmcolor, BLACK
 PRINT cpmdisk$;
@@ -258,7 +232,17 @@ LINE INPUT ">", cmd$
 IF cmd$ = "QUIT" THEN GOTO menu
 CALL CPMCommand(cmd$)
 
-GOTO cpm
+GOTO CPM
+
+'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
+
+modem:          ' MODEM.COM - Modem dialing software
+' You best not be dialing LONG DISTANCE with that thing or I swear!
+
+'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
+
+Postel:         ' Postal Telemessaging Server
+' Not for your spam messages, please. This is 1983. Not yet. Just chill.
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -274,6 +258,11 @@ HACCBBS:        ' The Hacker and Computing Connoisseur Bulletin Board System.
 ' Pages - BBS pages
 ' Best of USENET - best-of threads curated by the SYSOP
 ' Files - .GRB file formats (garbage), .DAT (used for tasks), .COM (executables)
+
+'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
+
+Fileserver:       ' Game fileservers
+' For all your up-a-loadin' and down-a-loadin' needs, yee-haw!
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -298,12 +287,15 @@ Gateway:        ' The NASA Public Gateway
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
 CPN:            ' NASA's Classified Private Network (CPN)
+' How'd you get on here, boy?
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-XPLOD:          ' The X-Series Probe Launcer and Orbiting Director, Version 3.
-' IBM calls it the X-PLOD-3. That's totally not telling.
+XPLOD:          ' The X-Series Probe Launcher and Orbiting Director, Version 3.
+' IBM calls it the X-PLOD-3.....great.
 
+'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
+' Subroutines
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
 SUB CPMBoot
@@ -311,15 +303,18 @@ SUB CPMBoot
     CLS
     COLOR cpmcolor, BLACK
     Disk (4)
-    CALL CPMOutput(1, 3)          ' TODO: change to new lineout
-    Delay (4)
-    PRINT : Disk (1): Delay (2)
+    CALL CPMOutput(1, 3)
+    LineoutDelay (4)
+    PRINT : Disk (1): LineoutDelay (2)
+    cpmdisk$ = "A"
 END SUB
 
 SUB CPMCommand (cmd$)
 ' Process a command from the CPM command prompt
-    subcmd$ = cmd$
-    SELECT CASE cmd$    ' Process builtin commands
+    netcmd$ = UCASE$(cmd$)
+
+    ' Process builtin commands
+    SELECT CASE netcmd$
         CASE "DIR"          ' Provides a directory listing for active drive
             CALL CPMDir
 
@@ -340,8 +335,17 @@ SUB CPMCommand (cmd$)
             cpmcolor = OLIVE
 
         ' Debug commands for Lineout subroutine demos
+        CASE "NASA"
+            CALL LineoutDemo(1, 18)
+
+        CASE "STARWARS"
+            CALL LineoutDemo(19, 20)
+
         CASE "SATURN"
-            CALL LineoutDemo(42, 34)
+            CALL LineoutDemo(39, 33)
+
+        CASE "TEXT"
+            CALL LineoutDemo(72, 28)
 
         CASE "TEST"
             CALL LineoutDemo(1, demolines)
@@ -369,23 +373,22 @@ SUB CPMCommand (cmd$)
                 modemslowbaud = TRUE
             END IF
 
-        ' Debug the Delay() tickrate
-        CASE "DELAY"
-            Delay (32)
+        ' Debug the LineoutDelay() tickrate
+        CASE "LineoutDelay"
+            LineoutDelay (32)
 
         ' ********** DEBUG COMMANDS **********
 
         CASE ""
-            Delay (4)
+            LineoutDelay (4)
 
         CASE ELSE
             ' Prepare for running commands by disk
             cmddisk$ = cpmdisk$
-            subcmd$ = cmd$
 
             ' Handle drive prefixes (e.g. A:STAT, B:TERM)
-            IF LEN(cmd$) >= 2 AND MID$(cmd$, 2, 1) = ":" THEN
-                cmddisk$ = MID$(cmd$, 1, 1)
+            IF LEN(netcmd$) >= 2 AND MID$(netcmd$, 2, 1) = ":" THEN
+                cmddisk$ = MID$(netcmd$, 1, 1)
 
                 ' Invalid drive select handler
                 IF cmddisk$ <> "A" AND cmddisk$ <> "B" THEN
@@ -394,27 +397,27 @@ SUB CPMCommand (cmd$)
                     WHILE newdisk$ = ""
                         newdisk$ = INKEY$
                     WEND
-                    PRINT
-                    IF newdisk$ = "B" THEN cpmdisk$ = "B"
+                    PRINT : LineoutDelay (1)
+                    IF newdisk$ = "B" OR newdisk$ = "b" THEN cpmdisk$ = "B"
                     EXIT SUB
                 END IF
 
                 ' Change active drive
-                IF LEN(cmd$) = 2 THEN
+                IF LEN(netcmd$) = 2 THEN
                     SetDisk (cmddisk$)
                     EXIT SUB
                 END IF
 
                 ' Prepare command variables for disk processing
-                cmddisk$ = MID$(cmd$, 1, 1)
-                subcmd$ = MID$(cmd$, 3)
+                cmddisk$ = MID$(netcmd$, 1, 1)
+                netcmd$ = MID$(netcmd$, 3)
             END IF
 
             ' Process commands from disk
             IF cmddisk$ = "A" THEN
-                CALL CPMCommandA(subcmd$, cmd$)
+                CALL CPMCommandA(netcmd$, cmd$)
             ELSE
-                CALL CPMCommandB(subcmd$, cmd$)
+                CALL CPMCommandB(netcmd$, cmd$)
             END IF
 
     END SELECT
@@ -443,7 +446,7 @@ SUB CPMCommandA (cmd$, fullcmd$)
 
         CASE ELSE
             PRINT fullcmd$ + "?"
-            Delay (4)
+            LineoutDelay (4)
 
     END SELECT
 END SUB
@@ -456,7 +459,7 @@ SUB CPMCommandB (cmd$, fullcmd$)
 
         CASE ELSE
             PRINT fullcmd$ + "?"
-            Delay (4)
+            LineoutDelay (4)
 
     END SELECT
 END SUB
@@ -473,21 +476,21 @@ END SUB
 SUB CPMDirOut (filenum%, filedata%())
 ' Helper routine for printing DIR command
     IF filenum% = 0 THEN
-        Delay (3): PRINT "No file"
+        LineoutDelay (3): PRINT "No file"
     ELSE
         rows% = 0: file% = 0
         header$ = cpmdisk$ + ": "
         spacer$ = " : "
         Disk (1)
         WHILE file% < filenum%
-            PRINT header$; : Delay (1)
+            PRINT header$; : LineoutDelay (1)
             count% = filenum% - file%
             IF count% > 4 THEN count% = 4
             FOR i% = 1 TO count%
                 IF i% <> 1 THEN PRINT spacer$;
                 target = filedata%(file% + 1)
                 PRINT gamefiles(target).displayname;
-                Delay (2)
+                LineoutDelay (2)
                 file% = file% + 1
             NEXT i%
             PRINT : rows% = rows% + 1
@@ -504,10 +507,10 @@ SUB CPMOutput (start%, numlines%)
             COLOR linedata(i).fgcolor, linedata(i).bgcolor
         END IF
 
-        IF linedata(i).linefeed THEN CALL LineDelay
+        IF linedata(i).linefeed THEN CALL LinefeedDelay
         PRINT lines(i);
         IF linedata(i).linefeed THEN
-            CALL LineDelay
+            CALL LinefeedDelay
             PRINT
         END IF
     NEXT i
@@ -515,17 +518,10 @@ END SUB
 
 SUB CPMStat
 ' Print out the STAT command to the CP/M terminal
-    Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
+    LineoutDelay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": LineoutDelay (6)
     readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
-    PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
+    PRINT "B: R/W, Space:"; : Disk (readtime%): LineoutDelay (6)
     PRINT STR$(cpmspace% * 4) + "k"; : PRINT : PRINT
-END SUB
-
-SUB Delay (ticks%)
-' Delay the local terminal for number of ticks
-    iter& = tickspeed% * ticks% * 100
-    FOR k = 1 TO iter&
-    NEXT k
 END SUB
 
 SUB Disk (seconds%)
@@ -539,7 +535,7 @@ SUB Disk (seconds%)
     END IF
 
     DO WHILE ticks% > 0
-        ' Pause before/between disk operations
+        ' pause before/between disk operations
         pausetime% = 2 ^ INT(RND * 3 + 3)       ' 2^3 - 2^5
         DiskPause (pausetime%)
         ticks% = ticks% - pausetime%
@@ -586,7 +582,7 @@ SUB Disk (seconds%)
 
     ' Perform final disk seek if over 1 second and add time delay
     IF seconds% > 1 THEN DiskSeek (16)
-    Delay (seconds%)
+    LineoutDelay (seconds%)
 END SUB
 
 SUB DiskPause (ticks%)
@@ -620,7 +616,28 @@ SUB EventTask (number%)
     ' Process each individual instructions (editing data, outputs, etc.)
 END SUB
 
-SUB LineDelay
+SUB Initialize
+' Initialize global variables
+    cpmanum% = 11
+    cpmbnum% = 0
+    cpmcolor = GREEN
+    cpmdisk$ = "A"
+    cpmramsize% = 20
+    cpmspace% = disksize%
+    gameeventtotal% = 0
+    gameloaded = TRUE
+    modemcolor = FALSE
+    modemtextcolor = OLIVE
+    modemslowbaud = TRUE
+
+    ERASE cpmafiles%, cpmbfiles%, gameevents%
+
+    FOR i = 1 TO cpmanum%   ' Initialize A: drive files
+        cpmafiles%(i) = i
+    NEXT i
+END SUB
+
+SUB LinefeedDelay
 ' Delay the local terminal for a linefeed
     FOR k = 1 TO tickspeed% * 25
     NEXT k
@@ -645,16 +662,23 @@ SUB Lineout (start%, numlines%, modem)
                 char$ = MID$(lines(i), j, 1)
                 PRINT char$;
                 IF char$ <> " " THEN PLAY sounds$
-                Pause (1)
+                RemoteDelay (1)
             NEXT j
-            CALL LineDelay
+            CALL LinefeedDelay
         ELSE
-            IF linedata(i).linefeed THEN CALL LineDelay
+            IF linedata(i).linefeed THEN CALL LinefeedDelay
             PRINT lines(i);
-            IF linedata(i).linefeed THEN CALL LineDelay
+            IF linedata(i).linefeed THEN CALL LinefeedDelay
         END IF
         IF linedata(i).linefeed THEN PRINT
     NEXT i
+END SUB
+
+SUB LineoutDelay (ticks%)
+' Delay the local terminal for number of ticks
+    iter& = tickspeed% * ticks% * 100
+    FOR k = 1 TO iter&
+    NEXT k
 END SUB
 
 SUB LineoutDemo (start%, numlines%)
@@ -662,7 +686,7 @@ SUB LineoutDemo (start%, numlines%)
     CALL Lineout(demooffset + start%, numlines%, demoremote)
 END SUB
 
-SUB Pause (ticks%)
+SUB RemoteDelay (ticks%)
 ' Pause the remote terminal for x ticks
     iter% = tickspeed% * ticks%
     IF modemslowbaud THEN iter% = iter% * 5
@@ -674,7 +698,7 @@ SUB SetDisk (newdisk$)
 ' Set the CP/M disk drive to specified disk
     IF cpmdisk$ <> newdisk$ THEN
         Disk (1)
-        Delay (5)
+        LineoutDelay (5)
     END IF
     cpmdisk$ = newdisk$
 END SUB

@@ -25,8 +25,8 @@
 ' Subroutine declarations
 DECLARE SUB CPMBoot ()                          ' CP/M Boot Routine
 DECLARE SUB CPMCommand (cmd$)                   ' Process a command from the CPM command prompt
-DECLARE SUB CPMCommandA (cmd$)                  ' Process a command from the A: Drive
-DECLARE SUB CPMCommandB (cmd$)                  ' Process a command from the B: Drive
+DECLARE SUB CPMCommandA (cmd$, fullcmd$)        ' Process a command from the A: Drive
+DECLARE SUB CPMCommandB (cmd$, fullcmd$)        ' Process a command from the B: Drive
 DECLARE SUB CPMDir ()                           ' Print the DIR command to the CP/M terminal
 DECLARE SUB CPMDirOut (filenum%, filedata%())   ' Helper routine for printing DIR command
 DECLARE SUB CPMOutput (start%, numlines%)       ' Perform a lineout from CP/M
@@ -66,7 +66,7 @@ CONST SILVER = 7:               CONST WHITE = 15
 ' For selecting the default color
 CONST DEFAULT = -1
 
-' Global variables
+' Global game variables
 DIM SHARED cpmanum%             ' Number of files on A: drive
 DIM SHARED cpmafiles%(16)       ' The list of files on the A: drive
 DIM SHARED cpmbnum%             ' Number of files on B: drive
@@ -153,15 +153,15 @@ cpmoffset = 0
 INPUT #1, cpmlines
 demooffset = cpmlines
 INPUT #2, demolines
-totallines = cpmlines + demolines
+totallines = cpmlines + demolines + 1
 
 ' Read demo text data
 DIM SHARED lines(1 TO totallines) AS STRING
 DIM SHARED linedata(1 TO totallines) AS TextData
-FOR i = 1 TO cpmlines
+FOR i = cpmoffset + 1 TO cpmoffset + cpmlines
     INPUT #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
 NEXT i
-FOR i = 1 TO demolines
+FOR i = demooffset + 1 TO demooffset + demolines
     INPUT #2, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
 NEXT i
 
@@ -198,7 +198,7 @@ gameloaded = FALSE
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-Menu:           ' Main game menu
+menu:           ' Main game menu
 
 ' Temporary Menu (to be moved to a proper subroutine)
 CLS
@@ -213,12 +213,12 @@ SELECT CASE menuselect$
     CASE "1"
         GOTO Initialize
     CASE "2"
-        IF gameloaded THEN GOTO CPM
+        IF gameloaded THEN GOTO cpm
     CASE "3"
         END
 END SELECT
 
-GOTO Menu
+GOTO menu
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -248,7 +248,7 @@ CALL CPMBoot
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-CPM:            ' CP/M Disk Prompt
+cpm:            ' CP/M Disk Prompt
 
 COLOR cpmcolor, BLACK
 PRINT cpmdisk$;
@@ -258,7 +258,7 @@ LINE INPUT ">", cmd$
 IF cmd$ = "QUIT" THEN GOTO menu
 CALL CPMCommand(cmd$)
 
-GOTO CPM
+GOTO cpm
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -313,11 +313,12 @@ SUB CPMBoot
     Disk (4)
     CALL CPMOutput(1, 3)          ' TODO: change to new lineout
     Delay (4)
-    PRINT: Disk (1): Delay (2)
+    PRINT : Disk (1): Delay (2)
 END SUB
 
 SUB CPMCommand (cmd$)
 ' Process a command from the CPM command prompt
+    subcmd$ = cmd$
     SELECT CASE cmd$    ' Process builtin commands
         CASE "DIR"          ' Provides a directory listing for active drive
             CALL CPMDir
@@ -340,10 +341,10 @@ SUB CPMCommand (cmd$)
 
         ' Debug commands for Lineout subroutine demos
         CASE "SATURN"
-            CALL Lineoutdemo(41, 34)
+            CALL LineoutDemo(42, 34)
 
         CASE "TEST"
-            CALL Lineoutdemo(1, demolines)
+            CALL LineoutDemo(1, demolines)
 
         CASE "REMOTE"
             IF demoremote THEN
@@ -380,6 +381,7 @@ SUB CPMCommand (cmd$)
         CASE ELSE
             ' Prepare for running commands by disk
             cmddisk$ = cpmdisk$
+            subcmd$ = cmd$
 
             ' Handle drive prefixes (e.g. A:STAT, B:TERM)
             IF LEN(cmd$) >= 2 AND MID$(cmd$, 2, 1) = ":" THEN
@@ -402,20 +404,20 @@ SUB CPMCommand (cmd$)
 
                 ' Prepare command variables for disk processing
                 cmddisk$ = MID$(cmd$, 1, 1)
-                cmd$ = MID$(cpm$, 3)
+                subcmd$ = MID$(cmd$, 3)
             END IF
 
             ' Process commands from disk
             IF cmddisk$ = "A" THEN
-                CPMCommandA (cmd$)
+                CALL CPMCommandA(subcmd$, cmd$)
             ELSE
-                CPMCommandB (cmd$)
+                CALL CPMCommandB(subcmd$, cmd$)
             END IF
 
     END SELECT
 END SUB
 
-SUB CPMCommandA (cmd$)
+SUB CPMCommandA (cmd$, fullcmd$)
 ' Process a command from the A: Drive
     SELECT CASE cmd$
         CASE "STAT"         ' Provides disk usage information
@@ -437,20 +439,20 @@ SUB CPMCommandA (cmd$)
             PRINT "SCORE isn't written yet."
 
         CASE ELSE
-            PRINT cmd$ + "?"
+            PRINT fullcmd$ + "?"
             Delay (4)
 
     END SELECT
 END SUB
 
-SUB CPMCommandB (cmd$)
+SUB CPMCommandB (cmd$, fullcmd$)
 ' Process a command from the B: Drive
     SELECT CASE cmd$
-        CASE "COLOR"        ' COLOR.COM - Color 
-            PRINT "A:COLOR.COM isn't written yet."
+        CASE "COLOR"        ' COLOR.COM - Color
+            PRINT "B:COLOR.COM isn't written yet."
 
         CASE ELSE
-            PRINT cmd$ + "?"
+            PRINT fullcmd$ + "?"
             Delay (4)
 
     END SELECT
@@ -490,7 +492,7 @@ SUB CPMDirOut (filenum%, filedata%())
     END IF
 END SUB
 
-SUB CPMOutput (start%, numlines%)      
+SUB CPMOutput (start%, numlines%)
 ' Perform CP/M text output
     FOR i = cpmoffset + start% TO cpmoffset + start% + numlines% - 1
         IF linedata(i).fgcolor = DEFAULT THEN
@@ -510,15 +512,10 @@ END SUB
 
 SUB CPMStat
 ' Print out the STAT command to the CP/M terminal
-    IF cpmdisk$ = "B" THEN
-        PRINT "STAT?"
-        Delay (4)
-    ELSE
-        Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
-        readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
-        PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
-        PRINT STR$(cpmspace% * 4) + "k"; : PRINT : PRINT
-    END IF
+    Delay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": Delay (6)
+    readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
+    PRINT "B: R/W, Space:"; : Disk (readtime%): Delay (6)
+    PRINT STR$(cpmspace% * 4) + "k"; : PRINT : PRINT
 END SUB
 
 SUB Delay (ticks%)
@@ -599,25 +596,25 @@ SUB DiskSeek (ticks%)
     PLAY "T255MLMFO1L" + STR$(INT(tickrate% / ticks%)) + "A"
 END SUB
 
-SUB EventTask (number%)
-' Process any event tasks by its number in the event list
-    ' Look up the event in the list
-    ' Process each individual instructions (editing data, outputs, etc.)
-END SUB
-
 SUB EventLoad
 ' Process all the previous game events for loading a saved game
     ' For each item in the list, call GameEvent
-    ' Updates all the stuff without 
+    ' Updates all the stuff without
 END SUB
 
 SUB EventScore (number%)
 ' Process a game event, update your score, and display event text
-    CALL EventTask (number%)
+    CALL EventTask(number%)
     ' Update score from event list
     ' Display text from the event text (optional)
     gameeventtotal% = gameeventtotal% + 1
     gameevents%(gameeventtotal%) = number%
+END SUB
+
+SUB EventTask (number%)
+' Process any event tasks by its number in the event list
+    ' Look up the event in the list
+    ' Process each individual instructions (editing data, outputs, etc.)
 END SUB
 
 SUB LineDelay
@@ -632,8 +629,8 @@ SUB Lineout (start%, numlines%, modem)
     IF modemslowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
     FOR i = start% TO start% + numlines% - 1
-        IF modemcolor THEN 
-            IF linedata(i).fgcolor = DEFAULT THEN 
+        IF modemcolor THEN
+            IF linedata(i).fgcolor = DEFAULT THEN
                 COLOR modemtextcolor, BLACK
             ELSE
                 COLOR linedata(i).fgcolor, linedata(i).bgcolor

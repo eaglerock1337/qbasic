@@ -387,11 +387,14 @@ SUB CPMCommand (cmd$)
             IF LEN(cmd$) >= 2 AND MID$(cmd$, 2, 1) = ":" THEN
                 cmddisk$ = MID$(cmd$, 1, 1)
 
-                ' Invalid drive select handling
+                ' Invalid drive select handler
                 IF cmddisk$ <> "A" AND cmddisk$ <> "B" THEN
                     cpmdisk$ = "A"
-                    PRINT "Bdos Err On " + cmddisk$;
-                    LINE INPUT ": Select", newdisk$
+                    PRINT "Bdos Err On " + cmddisk$ + ": Select";
+                    WHILE newdisk$ = ""
+                        newdisk$ = INKEY$
+                    WEND
+                    PRINT
                     IF newdisk$ = "B" THEN cpmdisk$ = "B"
                     EXIT SUB
                 END IF

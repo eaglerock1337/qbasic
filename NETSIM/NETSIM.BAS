@@ -649,16 +649,16 @@ SUB FileDel (drive$, location%)
         blocks% = gamefiles(cpmafiles%(location%)).blocks
         cpmaspace% = cpmaspace% + blocks%
         cpmanum% = cpmanum% - 1
-        FOR I = location% TO cpmanum%
-            cpmafiles%(I) = cpmafiles%(I + 1)
-        NEXT I
+        FOR i = location% TO cpmanum%
+            cpmafiles%(i) = cpmafiles%(i + 1)
+        NEXT i
     ELSEIF drive$ = "B" THEN
-        blocks% = gamefiles(cpmafiles%(location%)).blocks
+        blocks% = gamefiles(cpmbfiles%(location%)).blocks
         cpmbspace% = cpmbspace% + blocks%
         cpmbnum% = cpmbnum% - 1
-        FOR I = location% TO cpmbnum%
-            cpmbfiles%(I) = cpmbfiles%(I + 1)
-        NEXT I
+        FOR i = location% TO cpmbnum%
+            cpmbfiles%(i) = cpmbfiles%(i + 1)
+        NEXT i
     ELSE    ' Lazy (hopefully) temporary error handling
         PRINT "FileDel Error: How the hell did you get here?"
         END

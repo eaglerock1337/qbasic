@@ -1,4 +1,3 @@
-DECLARE SUB LinefeedDelay ()
 'The Internet Simulator by Peter Marks
 'A text-based adventure game based on the early 80's Internet.
 'The idea is from old code I wrote when I was 15 and I recently rediscovered.
@@ -38,6 +37,8 @@ DECLARE SUB DiskSeek (ticks%)                   ' Get a disk access sound for a 
 DECLARE SUB EventTask (number%)                 ' Process any event tasks by its number in the event list
 DECLARE SUB EventLoad ()                        ' Process all the previous game events for loading a saved game
 DECLARE SUB EventScore (number%)                ' Process a game event, update your score, and display event text
+DECLARE SUB FileAdd (drive$, number%)           ' Add a file designated by its number to the destination drive
+DECLARE SUB FileDel (drive$, location%)         ' Delete the file at the specified location from the specified drive
 DECLARE SUB Initialize ()                       ' Initialize global game variables for a new game
 DECLARE SUB LinefeedDelay ()                    ' Delay the local terminal for a linefeed
 DECLARE SUB Lineout (start%, numlines%, modem)  ' Perform a lineout of the requested text lines
@@ -46,10 +47,14 @@ DECLARE SUB LineoutDemo (start%, numlines%)     ' Perform a lineout from the dem
 DECLARE SUB RemoteDelay (ticks%)                ' Pause the remote terminal for x ticks
 DECLARE SUB SetDisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 
+' Function Declarations
+DECLARE FUNCTION FileSeek (drive$, number%)     ' Returns the location of the file if found, 0 otherwise
+
 ' Game constants
 CONST tickspeed% = 6            ' The configured tickspeed for screen output
 CONST tickrate% = 32            ' The number of ticks per second for disk access time
-CONST disksize% = 245           ' The size of the B: disk in 4kb blocks
+CONST diskasize% = 125          ' The size of the A: disk in 4kb blocks
+CONST diskbsize% = 245          ' The size of the B: disk in 4kb blocks
 
 ' Boolean constants
 CONST TRUE = 1
@@ -71,12 +76,13 @@ CONST DEFAULT = -1
 ' Global game variables
 DIM SHARED cpmanum%             ' Number of files on A: drive
 DIM SHARED cpmafiles%(16)       ' The list of files on the A: drive
+DIM SHARED cpmaspace%           ' Available A: drive space in KB
 DIM SHARED cpmbnum%             ' Number of files on B: drive
 DIM SHARED cpmbfiles%(40)       ' The list of files on the B: drive
+DIM SHARED cpmbspace%           ' Available B: drive space in KB
 DIM SHARED cpmcolor             ' The default terminal color used by CP/M
 DIM SHARED cpmdisk$             ' Current CP/M Disk Drive
 DIM SHARED cpmramsize%          ' The size of of the CP/M system
-DIM SHARED cpmspace%            ' Available B: drive space in KB
 DIM SHARED gameloaded           ' If the game is loaded
 DIM SHARED gameevents%(100)     ' List of game events that have occurred
 DIM SHARED gameeventtotal%      ' Total game events that have taken place
@@ -161,12 +167,12 @@ totallines = cpmlines + demolines
 ' Read demo text data
 DIM SHARED lines(1 TO totallines) AS STRING
 DIM SHARED linedata(1 TO totallines) AS TextData
-FOR i = cpmoffset + 1 TO cpmoffset + cpmlines
-    INPUT #1, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
-NEXT i
-FOR i = demooffset + 1 TO demooffset + demolines
-    INPUT #2, linedata(i).fgcolor, linedata(i).bgcolor, linedata(i).linefeed, lines(i)
-NEXT i
+FOR I = cpmoffset + 1 TO cpmoffset + cpmlines
+    INPUT #1, linedata(I).fgcolor, linedata(I).bgcolor, linedata(I).linefeed, lines(I)
+NEXT I
+FOR I = demooffset + 1 TO demooffset + demolines
+    INPUT #2, linedata(I).fgcolor, linedata(I).bgcolor, linedata(I).linefeed, lines(I)
+NEXT I
 
 ' Close game text files
 CLOSE #1, #2
@@ -179,9 +185,9 @@ INPUT #1, totalfiles
 DIM SHARED gamefilenames(1 TO totalfiles) AS STRING
 DIM SHARED gamefiles(1 TO totalfiles) AS GameFile
 
-FOR i = 1 TO totalfiles
-    INPUT #1, gamefiles(i).displayname, gamefiles(i).blocks, gamefiles(i).server, gamefiles(i).event, gamefilenames(i)
-NEXT i
+FOR I = 1 TO totalfiles
+    INPUT #1, gamefiles(I).displayname, gamefiles(I).blocks, gamefiles(I).server, gamefiles(I).event, gamefilenames(I)
+NEXT I
 
 CLOSE #1
 
@@ -190,7 +196,7 @@ gameloaded = FALSE
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-menu:           ' Main game menu
+Menu:           ' Main game menu
 
 ' Alpha development menu (none of this stays, capiche?)
 CLS
@@ -218,7 +224,7 @@ SELECT CASE menuselect$
         END
 END SELECT
 
-GOTO menu
+GOTO Menu
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -229,7 +235,7 @@ PRINT cpmdisk$;
 LINE INPUT ">", cmd$
 
 ' Return to menu or process command
-IF cmd$ = "QUIT" THEN GOTO menu
+IF cmd$ = "QUIT" THEN GOTO Menu
 CALL CPMCommand(cmd$)
 
 GOTO CPM
@@ -295,7 +301,7 @@ XPLOD:          ' The X-Series Probe Launcher and Orbiting Director, Version 3.
 ' IBM calls it the X-PLOD-3.....great.
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
-' Subroutines
+' Subroutines and Functions
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
 SUB CPMBoot
@@ -322,10 +328,9 @@ SUB CPMCommand (cmd$)
 
         ' Debug commands for DIR command
         CASE "FILES"
-            cpmbnum% = 5
-            FOR i = 1 TO 5
-                cpmbfiles%(i) = i + 12
-            NEXT i
+            FOR I% = 13 TO 17
+                CALL FileAdd("B", I%)
+            NEXT I%
 
         ' Debug commands for terminal color
         CASE "GREEN"
@@ -345,7 +350,7 @@ SUB CPMCommand (cmd$)
             CALL LineoutDemo(39, 33)
 
         CASE "TEXT"
-            CALL LineoutDemo(72, 28)
+            CALL LineoutDemo(72, 29)
 
         CASE "TEST"
             CALL LineoutDemo(1, demolines)
@@ -486,13 +491,13 @@ SUB CPMDirOut (filenum%, filedata%())
             PRINT header$; : LineoutDelay (1)
             count% = filenum% - file%
             IF count% > 4 THEN count% = 4
-            FOR i% = 1 TO count%
-                IF i% <> 1 THEN PRINT spacer$;
+            FOR I% = 1 TO count%
+                IF I% <> 1 THEN PRINT spacer$;
                 target = filedata%(file% + 1)
                 PRINT gamefiles(target).displayname;
                 LineoutDelay (2)
                 file% = file% + 1
-            NEXT i%
+            NEXT I%
             PRINT : rows% = rows% + 1
         WEND
     END IF
@@ -500,28 +505,28 @@ END SUB
 
 SUB CPMOutput (start%, numlines%)
 ' Perform CP/M text output
-    FOR i = cpmoffset + start% TO cpmoffset + start% + numlines% - 1
-        IF linedata(i).fgcolor = DEFAULT THEN
+    FOR I = cpmoffset + start% TO cpmoffset + start% + numlines% - 1
+        IF linedata(I).fgcolor = DEFAULT THEN
             COLOR cpmcolor, BLACK
         ELSE
-            COLOR linedata(i).fgcolor, linedata(i).bgcolor
+            COLOR linedata(I).fgcolor, linedata(I).bgcolor
         END IF
 
-        IF linedata(i).linefeed THEN CALL LinefeedDelay
-        PRINT lines(i);
-        IF linedata(i).linefeed THEN
+        IF linedata(I).linefeed THEN CALL LinefeedDelay
+        PRINT lines(I);
+        IF linedata(I).linefeed THEN
             CALL LinefeedDelay
             PRINT
         END IF
-    NEXT i
+    NEXT I
 END SUB
 
 SUB CPMStat
 ' Print out the STAT command to the CP/M terminal
-    LineoutDelay (6): PRINT "A: R/O, Space: "; : Disk (3): PRINT "68k": LineoutDelay (6)
-    readtime% = INT(((disksize% - cpmspace%) / disksize%) * 14 * 4) + 1
-    PRINT "B: R/W, Space:"; : Disk (readtime%): LineoutDelay (6)
-    PRINT STR$(cpmspace% * 4) + "k"; : PRINT : PRINT
+    LineoutDelay (6): PRINT "A: R/O, Space:"; : Disk (2)
+    PRINT STR$(cpmaspace% * 4) + "k": LineoutDelay (6)
+    PRINT "B: R/W, Space:"; : Disk (2): LineoutDelay (6)
+    PRINT STR$(cpmbspace% * 4) + "k"; : PRINT : PRINT
 END SUB
 
 SUB Disk (seconds%)
@@ -554,17 +559,17 @@ SUB Disk (seconds%)
                 ticks% = ticks% - 20
 
             CASE IS < 90    ' Two quick seeks
-                FOR i = 1 TO 2
+                FOR I = 1 TO 2
                     DiskSeek (2)
                     DiskPause (16)
-                NEXT i
+                NEXT I
                 ticks% = ticks% - 36
 
             CASE IS < 95    ' Three quick seeks
-                FOR i = 1 TO 3
+                FOR I = 1 TO 3
                     DiskSeek (2)
                     DiskPause (16)
-                NEXT i
+                NEXT I
                 ticks% = ticks% - 54
 
             CASE ELSE       ' Jump and two quick seeks
@@ -616,14 +621,83 @@ SUB EventTask (number%)
     ' Process each individual instructions (editing data, outputs, etc.)
 END SUB
 
+SUB FileAdd (drive$, number%)
+' Add a file designated by its number to the destination drive
+    ' Delete the file if it's present first
+    fileloc% = FileSeek(drive$, number%)
+    IF fileloc% <> 0 THEN CALL FileDel(drive$, fileloc%)
+
+    ' Yes, this is lazy. Sue me.
+    IF drive$ = "A" THEN
+        cpmanum% = cpmanum% + 1
+        cpmafiles%(cpmanum%) = number%
+        cpmaspace% = cpmaspace% - gamefiles(number%).blocks
+    ELSEIF drive$ = "B" THEN
+        cpmbnum% = cpmbnum% + 1
+        cpmbfiles%(cpmbnum%) = number%
+        cpmbspace% = cpmbspace% - gamefiles(number%).blocks
+    ELSE    ' Lazy (hopefully) temporary error handling
+        PRINT "FileAdd Error: How the hell did you get here?"
+        END
+    END IF
+END SUB
+
+SUB FileDel (drive$, location%)
+' Delete the file at the specified location from the specified drive
+    ' Yes, this is also lazy. Sue me.
+    IF drive$ = "A" THEN
+        blocks% = gamefiles(cpmafiles%(location%)).blocks
+        cpmaspace% = cpmaspace% + blocks%
+        cpmanum% = cpmanum% - 1
+        FOR I = location% TO cpmanum%
+            cpmafiles%(I) = cpmafiles%(I + 1)
+        NEXT I
+    ELSEIF drive$ = "B" THEN
+        blocks% = gamefiles(cpmafiles%(location%)).blocks
+        cpmbspace% = cpmbspace% + blocks%
+        cpmbnum% = cpmbnum% - 1
+        FOR I = location% TO cpmbnum%
+            cpmbfiles%(I) = cpmbfiles%(I + 1)
+        NEXT I
+    ELSE    ' Lazy (hopefully) temporary error handling
+        PRINT "FileDel Error: How the hell did you get here?"
+        END
+    END IF
+END SUB
+
+FUNCTION FileSeek (drive$, number%)
+' Returns the location of the file if found, 0 otherwise
+    IF drive$ = "A" THEN
+        FOR I = 1 TO cpmanum%
+            IF cpmafiles%(I) = number% THEN
+                FileSeek = I
+                EXIT FUNCTION
+            END IF
+        NEXT I
+        FileSeek = 0
+    ELSEIF drive$ = "B" THEN
+        FOR I = 1 TO cpmbnum%
+            IF cpmbfiles%(I) = number% THEN
+                FileSeek = I
+                EXIT FUNCTION
+            END IF
+        NEXT I
+        FileSeek = 0
+    ELSE    ' Lazy (hopefully) temporary error handling
+        PRINT "FileSeek Error: How the hell did you get here?"
+        END
+    END IF
+END FUNCTION
+
 SUB Initialize
 ' Initialize global variables
-    cpmanum% = 11
+    cpmanum% = 0
+    cpmaspace% = diskasize%
     cpmbnum% = 0
+    cpmbspace% = diskbsize%
     cpmcolor = GREEN
     cpmdisk$ = "A"
     cpmramsize% = 20
-    cpmspace% = disksize%
     gameeventtotal% = 0
     gameloaded = TRUE
     modemcolor = FALSE
@@ -632,9 +706,9 @@ SUB Initialize
 
     ERASE cpmafiles%, cpmbfiles%, gameevents%
 
-    FOR i = 1 TO cpmanum%   ' Initialize A: drive files
-        cpmafiles%(i) = i
-    NEXT i
+    FOR I% = 1 TO 11    ' Initialize A: drive files
+        CALL FileAdd("A", I%)
+    NEXT I%
 END SUB
 
 SUB LinefeedDelay
@@ -648,30 +722,30 @@ SUB Lineout (start%, numlines%, modem)
     sounds$ = "T255MSMFO4L64A-"
     IF modemslowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
 
-    FOR i = start% TO start% + numlines% - 1
+    FOR I = start% TO start% + numlines% - 1
         IF modemcolor THEN
-            IF linedata(i).fgcolor = DEFAULT THEN
+            IF linedata(I).fgcolor = DEFAULT THEN
                 COLOR modemtextcolor, BLACK
             ELSE
-                COLOR linedata(i).fgcolor, linedata(i).bgcolor
+                COLOR linedata(I).fgcolor, linedata(I).bgcolor
             END IF
         END IF
 
         IF modem THEN
-            FOR j = 1 TO LEN(lines(i))
-                char$ = MID$(lines(i), j, 1)
+            FOR j = 1 TO LEN(lines(I))
+                char$ = MID$(lines(I), j, 1)
                 PRINT char$;
                 IF char$ <> " " THEN PLAY sounds$
                 RemoteDelay (1)
             NEXT j
             CALL LinefeedDelay
         ELSE
-            IF linedata(i).linefeed THEN CALL LinefeedDelay
-            PRINT lines(i);
-            IF linedata(i).linefeed THEN CALL LinefeedDelay
+            IF linedata(I).linefeed THEN CALL LinefeedDelay
+            PRINT lines(I);
+            IF linedata(I).linefeed THEN CALL LinefeedDelay
         END IF
-        IF linedata(i).linefeed THEN PRINT
-    NEXT i
+        IF linedata(I).linefeed THEN PRINT
+    NEXT I
 END SUB
 
 SUB LineoutDelay (ticks%)

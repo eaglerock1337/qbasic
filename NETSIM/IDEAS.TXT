@@ -56,7 +56,31 @@
 '0 Bytes Empty           65535 Total Active Bytes
 '
 'Active I/O ports:
-'10 11 12 13 14 15 16 17
+'2 3 4
+
+
+BIOS 0x19FC, 6652 Bytes
+BDOS 0xDFD,  3581 Bytes
+
+20K CPM total 0x5000, 20480 Bytes
+
+BIOS at 3604 (13828)
+BDOS at 2807 (10247)
+
+10247 Bytes RAM
+
+'Memory map:
+'0       8       16      24      32      40      48      56      64
+'|       |       |       |       |       |       |       |       |
+' TTTTTTTTTTCCCBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+'T=TPA   C=CPM   B=BIOS or unassigned    R=ROM or bad
+'BIOS at 3604    iobyte 01       drive 01        BDOS at 2807
+'
+'65535 Bytes RAM         0 Bytes ROM             10247 Bytes in TPA
+'0 Bytes Empty           65535 Total Active Bytes
+'
+
+
 
 '-=-=-=-=-=-=-=-=-=-=-=-'
 
@@ -82,3 +106,10 @@ C>DIR
 C: LOAD     COM : PIP      COM : STAT     COM : SUBMIT   COM
 C: DDT      COM : DISPLAY  COM : DUMP     COM : ED       COM
 C: ASM      COM
+
+C>PIP D.COM=DISPLAY.COM  
+
+C>ERA D.COM D2.COM D3.COM
+D2.COM?
+
+C>

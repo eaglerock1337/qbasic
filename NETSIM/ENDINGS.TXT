@@ -35,7 +35,7 @@ While you were let off and were able to go home the next day, the computer was
 promptly taken away by your parents, and you'll never touch a computer again
 while living under their roof.
 
-# Medium cyber crime ending
+# Medium cyber crime ending - strong evidence
 
 Two days after your antics online, you get a visit from the NYPD inquiring
 about your illegal cyberactivity. You are promptly arrested and your computer
@@ -43,12 +43,22 @@ confiscated. Illegal software and activity found on your computer has made for
 a strong district attorney case. If you don't go to jail, you can expect some
 community service time, as well as a permanent grounded status at home.
 
-# Major cyber crime ending
+# Major cyber crime ending - strong evidence
 
 The next morning, your apartment is stormed by NYPD and SWAT who come and take
 you and your computer by force. You are arrested and detained while the Altair
 is examined for illegal software and activity. You are introduced to a public
-defender who explains that the case against you is strong and that you will be
-tried as an adult, so a plea bargain is your best chance. The DA offers you a
-5-year sentence as a bargain, which you quickly take to avoid even longer
-prison time. You spend the rest of your adolescence in prison.
+defender who explains that the case against you is strong, so a plea bargain is
+your best chance. The DA offers you an 18-month sentence with a chance of early
+release after 1 year, which you quickly accept. You are released a few months
+before what would've been your high-school graduation. While you were welcomed
+back home, you need to get to work right away, as you now need to pay rent.
+
+# Federal cyber crime ending
+
+The next morning, your apartment is raided by FBI and SWAT who come in and take
+you and your computer by force. You are immediately driven to an undisclosed
+FBI building where you are interrogated for several hours and where your Altair
+is searched for evidence. You get to occasionally talk to your parents on the
+phone as your public defender explains you are looking at a 5-10 year sentence
+in federal prison with no chance of bail.

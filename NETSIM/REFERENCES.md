@@ -1,6 +1,8 @@
 # References
 
 - [8" Floppy Disk Sounds](https://www.youtube.com/watch?v=mxzstusQggA)
+- [Floppy Disk Formats](https://en.wikipedia.org/wiki/List_of_floppy_disk_formats)
+- [Floppy Drive Specs](https://www.liquisearch.com/floppy_disk/sizes/sizes_performance_and_capacity)
 - [Bootstrap Loader Example](https://www.youtube.com/watch?v=FKNayPnZT54)
 - [Cassette Loader Example](https://www.youtube.com/watch?v=55j7Be0IPWw)
 - [Prestel Demonstration (Messaging)](https://youtu.be/GETqUVMXX3I?t=241)
@@ -9,3 +11,5 @@
 - [2400 Baud Demonstration](https://youtu.be/D1zbLg6IHVE)
 - [Modem Sounds](https://www.youtube.com/watch?v=ckc6XSSh52w)
 - [BBS Demonstration](https://youtu.be/e9f0sKpe7GU)
+- [CP/M Builtin Reference](http://www.discordia.org.uk/px4/cpm.html)
+- [CP/M Error Messages](http://www.gaby.de/cpm/manuals/archive/cpm22htm/axi.htm)

@@ -41,20 +41,22 @@ DECLARE SUB FileAdd (drive$, number%)           ' Add a file designated by its n
 DECLARE SUB FileDel (drive$, location%)         ' Delete the file at the specified location from the specified drive
 DECLARE SUB Initialize ()                       ' Initialize global game variables for a new game
 DECLARE SUB LinefeedDelay ()                    ' Delay the local terminal for a linefeed
-DECLARE SUB Lineout (start%, numlines%, modem)  ' Perform a lineout of the requested text lines
+DECLARE SUB Lineout (start%, numlines%, baud)   ' Perform a lineout of the requested text lines
 DECLARE SUB LineoutDelay (ticks%)               ' Delay by a set number of ticks
 DECLARE SUB LineoutDemo (start%, numlines%)     ' Perform a lineout from the demo text
 DECLARE SUB RemoteDelay (ticks%)                ' Pause the remote terminal for x ticks
 DECLARE SUB SetDisk (newdisk$)                  ' Set the CP/M disk drive to specified disk
 
 ' Function Declarations
+DECLARE FUNCTION CommandParse (cmd$)            ' Parses a command and returns values
+DECLARE FUNCTION FileFind (file$)               ' Returns TRUE if the file is found, FALSE otherwise
 DECLARE FUNCTION FileSeek (drive$, number%)     ' Returns the location of the file if found, 0 otherwise
 
 ' Game constants
 CONST tickspeed% = 6            ' The configured tickspeed for screen output
 CONST tickrate% = 32            ' The number of ticks per second for disk access time
-CONST diskasize% = 125          ' The size of the A: disk in 4kb blocks
-CONST diskbsize% = 245          ' The size of the B: disk in 4kb blocks
+CONST diskasize% = 125          ' The size of the A: disk in 4kb blocks (500kb)
+CONST diskbsize% = 245          ' The size of the B: disk in 4kb blocks (980kb)
 
 ' Boolean constants
 CONST TRUE = 1
@@ -242,7 +244,7 @@ GOTO CPM
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 
-modem:          ' MODEM.COM - Modem dialing software
+Modem:          ' MODEM.COM - Modem dialing software
 ' You best not be dialing LONG DISTANCE with that thing or I swear!
 
 '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
@@ -665,6 +667,37 @@ SUB FileDel (drive$, location%)
     END IF
 END SUB
 
+FUNCTION FileFind (file$)
+' Returns TRUE if the file is found, FALSE otherwise
+    cmddisk$ = cpmdisk$
+    netfile$ = file$
+
+    ' Handle drive prefixes (e.g. A:STAT, B:TERM)
+    IF LEN(file$) >= 2 AND MID$(file$, 2, 1) = ":" THEN
+        cmddisk$ = MID$(netcmd$, 1, 1)
+
+        ' Invalid drive specified
+        IF cmddisk$ <> "A" AND cmddisk$ <> "B" THEN
+            FileFind = FALSE
+            EXIT FUNCTION
+        END IF
+
+        ' No file specified (e.g. A:, B:)
+        IF LEN(netcmd$) = 2 THEN
+            FileFind = FALSE
+            EXIT FUNCTION
+        END IF
+
+        ' Prepare command variables for disk processing
+        cmddisk$ = MID$(netcmd$, 1, 1)
+        netcmd$ = MID$(netcmd$, 3)
+    END IF
+
+    result% = FileSeek(cmddisk$, netcmd$)
+    FileFind = TRUE
+    IF result% = 0 THEN FileFind = FALSE
+END SUB
+
 FUNCTION FileSeek (drive$, number%)
 ' Returns the location of the file if found, 0 otherwise
     IF drive$ = "A" THEN
@@ -717,7 +750,7 @@ SUB LinefeedDelay
     NEXT k
 END SUB
 
-SUB Lineout (start%, numlines%, modem)
+SUB Lineout (start%, numlines%, baud)
 ' Perform a terminal lineout of the requested text lines
     sounds$ = "T255MSMFO4L64A-"
     IF modemslowbaud THEN sounds$ = "T255MSMFO5L64EO4A-P64"
@@ -731,7 +764,7 @@ SUB Lineout (start%, numlines%, modem)
             END IF
         END IF
 
-        IF modem THEN
+        IF baud THEN
             FOR j = 1 TO LEN(lines(I))
                 char$ = MID$(lines(I), j, 1)
                 PRINT char$;
